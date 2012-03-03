@@ -16,7 +16,7 @@ public class RAM {
 		return instance;
 	}
 	
-	private RAM()
+	public RAM()
 	{
 		ram = new String[1024];
 		next_location = 0;
@@ -24,7 +24,7 @@ public class RAM {
 		
 	}
 
-	private RAM(int a)
+	public RAM(int a)
 	{
 		ram = new String[a];
 		size = ram.length;
