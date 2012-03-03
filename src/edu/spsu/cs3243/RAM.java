@@ -6,7 +6,17 @@ public class RAM {
 	private static int next_location;
 	private static int size;
 	
-	public RAM()
+	private static RAM instance = null;
+	
+	public static RAM instance() {
+		if(instance == null) {
+			instance = new RAM();
+		}
+		
+		return instance;
+	}
+	
+	private RAM()
 	{
 		ram = new String[1024];
 		next_location = 0;
@@ -14,29 +24,29 @@ public class RAM {
 		
 	}
 
-	public RAM(int a)
+	private RAM(int a)
 	{
 		ram = new String[a];
 		size = ram.length;
 		next_location = 0; 
 	}
 	
-	public static int size()
+	public int size()
 	{
 		return size;
 	}
 	
-	public static boolean empty()
+	public boolean empty()
 	{
 		return next_location == 0;
 	}
 	
-	public static int full()
+	public int full()
 	{
 		return next_location = 1024;
 	}
 	
-	public static int free ()
+	public int free ()
 	{
 		return 1024-size;
 	}
@@ -66,7 +76,7 @@ public class RAM {
  }
 
 	//Erases data from RAM
-	public static void erase()
+	public void erase()
 	{
 		for(int i = 0; i<ram.length;i++)
 		{
@@ -76,7 +86,7 @@ public class RAM {
 	}
 	
 	//Read RAM
-	public static String read(int loc)
+	public String read(int loc)
 	{
 		if(loc>=0 && loc<1024)
 		{
@@ -92,7 +102,7 @@ public class RAM {
 	}
 	
 	//DMA Read from RAM 
-	public static String read(int b, int o)
+	public String read(int b, int o)
 	{
 		if(b+o>=0 && b+o<1024)
 		{
@@ -107,7 +117,7 @@ public class RAM {
 	}
 	
 	//Write data to next free ram location
-	public static int write(String w)
+	public int write(String w)
 	{
 		if (next_location>1024)
 		{
@@ -130,7 +140,7 @@ public class RAM {
 	
 	
 	//Write data to RAM 
-	public static void write(String data, int location)
+	public void write(String data, int location)
 	{
 		if (data != null)
 		{
@@ -153,7 +163,7 @@ public class RAM {
 	}
 	
 	//DMA Write data to RAM 
-	public static void write (String w, int b, int o)
+	public void write (String w, int b, int o)
 	{
 		if(w!=null)
 		{
