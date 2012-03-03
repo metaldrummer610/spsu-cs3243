@@ -8,31 +8,38 @@ public class Loader
 	private File file1, file2;
 	private BufferedReader in;
 
-	public static void load() 
+	public load() 
 	{	
 		file1 = "DataFile1.txt";
 		file2 = "DataFile2.txt";
 		
-		in = new BufferedReader(new FileReader(file1));
-		
-		string input;
-		while((input = in.ReadLine()) != null)
+		try
 		{
-			//TODO Send to PCB
-			if(input.contains("JOB"))
+			in = new BufferedReader(new FileReader(file1));
+			
+			string input;
+			while((input = in.ReadLine()) != null)
 			{
-				this.process(input);
+				//TODO Send to PCB
+				if(input.contains("JOB"))
+				{
+					this.process(input);
+				}
+				else if(input.contains("Data"))
+				{
+					this.data(input);
+				}
+				else if(input.contains("END"))
+				{
+					
+				}
 			}
-			else if(input.contains("Data"))
-			{
-				this.data(input);
-			}
-			else if(input.contains("END"))
-			{
-				
-			}
+			in.close();
 		}
-		
+		catch(IOException e)
+		{
+			System.err("Loader reader exception");
+		}	
 	}
 	
 	private static void process(String s)
