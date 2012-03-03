@@ -7,12 +7,15 @@ public class Driver {
 	private ArrayList<CPU> cpus;
 	private LongTermScheduler longTermScheduler;
 	private ShortTermScheduler shortTermScheduler;
+	private MemoryManager memoryManager;
 	
 	public static void main(String args[]) {
 		new Driver().run(args);
 	}
 	
 	public void run(String args[]) {
+		
+		memoryManager = new MemoryManager();
 		longTermScheduler = new LongTermScheduler();
 		shortTermScheduler = new ShortTermScheduler();
 		
