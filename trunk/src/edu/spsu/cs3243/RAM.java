@@ -20,7 +20,7 @@ public class RAM {
 	{
 		ram = new String[1024];
 		next_location = 0;
-		size = 0 ;
+		size = 1024 ;
 		
 	}
 
@@ -41,9 +41,9 @@ public class RAM {
 		return next_location == 0;
 	}
 	
-	public int full()
+	public boolean full()
 	{
-		return next_location = 1024;
+		return next_location == size;
 	}
 	
 	public int free ()
