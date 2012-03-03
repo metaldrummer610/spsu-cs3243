@@ -7,7 +7,8 @@ public class Driver {
 	private ArrayList<CPU> cpus;
 	private LongTermScheduler longTermScheduler;
 	private ShortTermScheduler shortTermScheduler;
-	private MemoryManager memoryManager;
+	private RAM ram;
+	private Disk disk;
 	
 	public static void main(String args[]) {
 		new Driver().run(args);
@@ -15,7 +16,8 @@ public class Driver {
 	
 	public void run(String args[]) {
 		
-		memoryManager = new MemoryManager();
+		ram.instance();
+		disk.instance();
 		longTermScheduler = new LongTermScheduler();
 		shortTermScheduler = new ShortTermScheduler();
 		
