@@ -5,35 +5,47 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class Loader {
+public class Loader 
+{
 	private File file1, file2;
 	private BufferedReader in;
 
-	public void load() {
+	public void load() 
+	{
 		file1 = new File("DataFile1.txt");
 		file2 = new File("DataFile2.txt");
 
-		try {
+		try 
+		{
 			in = new BufferedReader(new FileReader(file1));
 
 			String input;
-			while ((input = in.readLine()) != null) {
+			while ((input = in.readLine()) != null) 
+			{
 				// TODO Send to PCB
-				if (input.contains("JOB")) {
+				if (input.contains("JOB")) 
+				{
 					process(input);
-				} else if (input.contains("Data")) {
+				} 
+				else if (input.contains("Data")) 
+				{
 					data(input);
-				} else if (input.contains("END")) {
+				} 
+				else if (input.contains("END")) 
+				{
 
 				}
 			}
 			in.close();
-		} catch (IOException e) {
+		} 
+		catch (IOException e) 
+		{
 			System.err.println("Loader reader exception");
 		}
 	}
 
-	private static void process(String s) {
+	private static void process(String s) 
+	{
 		String tempString;
 		int index, priority, size, id;
 		String idNum, sizeHex;
@@ -54,7 +66,8 @@ public class Loader {
 
 	}
 
-	private static void data(String s) {
+	private static void data(String s) 
+	{
 		int inBuff, outBuff, tempBuff, index;
 		String temp, out, in;
 
@@ -69,7 +82,8 @@ public class Loader {
 		tempBuff = Integer.parseInt(temp, 16);
 	}
 
-	private static void endData() {
+	private static void endData() 
+	{
 
 	}
 
