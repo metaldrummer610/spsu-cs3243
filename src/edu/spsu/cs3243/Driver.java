@@ -13,7 +13,6 @@ public class Driver {
 	}
 	
 	public void run(String args[]) {
-		RAM.initalize();
 		longTermScheduler = new LongTermScheduler();
 		shortTermScheduler = new ShortTermScheduler();
 		
