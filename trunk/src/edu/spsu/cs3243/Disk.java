@@ -15,14 +15,14 @@ public class Disk
 		return instance;
 	}
 	
-	private Disk()
+	public Disk()
 	{
 		disk = new String[2048];
 		size = 2048;
 		next_location = 0;
 	}
 	
-	private Disk(int d)
+	public Disk(int d)
 	{
 		disk =  new String[d];
 		size = disk.length;
