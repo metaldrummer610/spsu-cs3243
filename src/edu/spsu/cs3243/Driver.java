@@ -11,16 +11,14 @@ public class Driver {
 	private ProcessQueue readyQueue;
 	private ProcessQueue runningQueue;
 	private ProcessQueue terminatedQueue;
-	private RAM ram;
-	private Disk disk;
 	
 	public static void main(String args[]) {
 		new Driver().run(args);
 	}
 
 	public void run(String args[]) {
-		ram.instance();
-		disk.instance();
+		RAM.instance();
+		Disk.instance();
 		longTermScheduler = new LongTermScheduler();
 		shortTermScheduler = new ShortTermScheduler();
 		newQueue = new ProcessQueue();
