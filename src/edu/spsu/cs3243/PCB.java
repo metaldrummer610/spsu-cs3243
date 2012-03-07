@@ -37,5 +37,30 @@ public class PCB
 		faultTime=0;
 		lastStateSwitch=0;
 	}
+	
+	public int instDiskLoc()
+	{
+		return instDiskLoc;
+	}
+	
+	public int dataDiskLoc()
+	{
+		return dataDiskLoc;
+	}
+	
+	public int dataSize()
+	{
+		return dataSize;
+	}
+	
+	public int processSize()
+	{
+		return processSize;
+	}
+	
+	public void setinstMemLoc(int i)
+	{
+		instMemLoc = i;
+	}
 
 }

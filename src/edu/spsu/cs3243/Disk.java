@@ -29,22 +29,22 @@ public class Disk
 		next_location = 0;
 	}
 	
-	public int size()
+	public static int size()
 	{
 		return size;
 	}
 	
-	public boolean empty()
+	public static boolean empty()
 	{
 		return next_location == 0;
 	}
 	
-	public boolean full()
+	public static boolean full()
 	{
 		return next_location == size;
 	}
 	
-	public int free ()
+	public static int free ()
 	{
 		return 2048-size;
 	}
@@ -63,7 +63,7 @@ public class Disk
 		
 	}
 	
-	  public void erase() 
+	  public static void erase() 
 	  {
           for(int i = 0;i < disk.length; i++) {
                   disk[i]="00000000";     
@@ -73,7 +73,7 @@ public class Disk
 	  
 	  
 	  //Write to Disk
-	  public int write(String word)
+	  public static int write(String word)
 	  {
 		  if(full())
 		  {
@@ -90,7 +90,7 @@ public class Disk
 	  
 	  }
 	  
-	  public String read(int address)
+	  public static String read(int address)
 	  {
 		  if(address>2048)
 		  {

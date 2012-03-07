@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class ProcessQueue {
 
-	private ArrayList<PCB> processes;
+	public ArrayList<PCB> processes;
 
 	public ProcessQueue() {
 		processes = new ArrayList<PCB>();
@@ -13,8 +13,19 @@ public class ProcessQueue {
 	public void add(PCB pcb) {
 		processes.add(pcb);
 	}
+	
+	public void remove(PCB pcb) {
+		processes.remove(pcb);
+	}
 
 	public PCB get(int index) {
 		return processes.get(index);
 	}
+	
+	public int size()
+	{
+		return processes.size();
+	}
+	
+	
 }
