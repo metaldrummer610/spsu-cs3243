@@ -20,16 +20,16 @@ public class CPU {
 		 * Pretty much, this is what I need to do... 1. Get the address of the next instruction 2. Decode that instruction 3. Do what the instruction wants to do 4. Repeat Decoding
 		 * the instructions 1. Take the instruction and convert it to a binary string 2. Pick apart the string to find all the different parts
 		 */
-		
+
 		pc = currentProcess.pc;
-		
+
 		running = true;
-		while(running) {
-			String binaryString = hexToBinary(RAM.instance().read(currentProcess.instructionBaseAddress + pc));
+		while (running) {
+			String binaryString = hexToBinary(RAM.instance().read(currentProcess.instMemLoc + pc));
 			executeInstruction(binaryString);
 		}
-		
-		//TODO: Do we need any debugging or print outs here?
+
+		// TODO: Do we need any debugging or print outs here?
 	}
 
 	public void executeInstruction(String binaryString) {
@@ -104,7 +104,7 @@ public class CPU {
 		default:
 			break;
 		}
-		
+
 		pc++;
 	}
 
@@ -159,32 +159,32 @@ public class CPU {
 			break;
 		case 0x15: // BEQ
 			if (registers[bReg] == registers[dReg])
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			else
 				pc++;
 			break;
 		case 0x16: // BNE
 			if (registers[bReg] != registers[dReg])
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			break;
 		case 0x17: // BEZ
 			if (registers[bReg] == 0)
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			break;
 		case 0x18: // BNZ
 			if (registers[bReg] != 0)
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			break;
 		case 0x19: // BGZ
 			if (registers[bReg] > 0)
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			break;
 		case 0x1A: // BLZ
 			if (registers[bReg] < 0)
-				pc = currentProcess.baseAddress + address;
+				pc = currentProcess.instMemLoc + address;
 			break;
 		}
-		
+
 		pc++;
 	}
 
@@ -199,18 +199,31 @@ public class CPU {
 
 	private void doIO(String binaryString) {
 		int opcode = getOpcode(binaryString);
+		int reg1 = getIOReg1(binaryString);
+		int reg2 = getIOReg2(binaryString);
+		int address = getIOAddress(binaryString);
 		// 00 RD I/O Reads content of I/P buffer into a accumulator
 		// 01 WR I/O Writes the content of accumulator into O/P buffer
 
 		switch (opcode) {
 		case 0x00: // RD
 			// TODO: Finish when you figure it out
+			if (reg2 != 0) {
+				registers[reg1] = registers[reg2];
+			} else {
+				registers[reg1] = Integer.parseInt(RAM.instance().read(currentProcess.instMemLoc + address), 16);
+			}
 			break;
 		case 0x01: // WR
 			// TODO: Finish when you figure it out
+			if (reg2 != 0) {
+				registers[reg2] = registers[reg1];
+			} else {
+				RAM.instance().write(Integer.toHexString(registers[reg1]), address);
+			}
 			break;
 		}
-		
+
 		pc++;
 	}
 
