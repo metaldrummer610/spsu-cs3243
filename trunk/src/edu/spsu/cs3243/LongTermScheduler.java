@@ -24,7 +24,7 @@ public class LongTermScheduler
 		{
 			job = Driver.newQueue.get(0);
 			
-			if(job.processSize()+job.dataSize() > RAM.free())
+			if(job.processSize()+job.dataSize() > RAM.instance().free())
 			{
 				System.out.println("No RAM left");
 				return;
@@ -39,11 +39,11 @@ public class LongTermScheduler
 		{
 			if(instMemLoc == -1)
 			{
-				job.setinstMemLoc(RAM.write(Disk.read(current)));
+				job.setinstMemLoc(RAM.instance().write(Disk.read(current)));
 			}
 			else
 			{
-				RAM.write(Disk.read(current));
+				RAM.instance().write(Disk.read(current));
 			}
 			
 		}
@@ -52,12 +52,12 @@ public class LongTermScheduler
 		{
 			if(job.dataMemLoc == -1)
 			{
-				job.setinstMemLoc(RAM.write(Disk.read(current)));
+				job.setinstMemLoc(RAM.instance().write(Disk.read(current)));
 			}
 			
 			else
 			{
-				RAM.write(Disk.read(current));
+				RAM.instance().write(Disk.read(current));
 			}
 		}
 		
