@@ -7,10 +7,10 @@ public class Driver {
 	private ArrayList<CPU> cpus;
 	private LongTermScheduler longTermScheduler;
 	private ShortTermScheduler shortTermScheduler;
-	public static ProcessQueue newQueue;
-	public static ProcessQueue readyQueue;
-	public static ProcessQueue runningQueue;
-	public static ProcessQueue terminatedQueue;
+	private ProcessQueue newQueue;
+	private ProcessQueue readyQueue;
+	private ProcessQueue runningQueue;
+	private ProcessQueue terminatedQueue;
 	
 	public static void main(String args[]) {
 		new Driver().run(args);
@@ -30,8 +30,8 @@ public class Driver {
 		cpus.add(new CPU());
 
 		Loader.load(newQueue);
-		while (true) {
-			longTermScheduler.load();
+		do {
+			longTermScheduler.load(newQueue, readyQueue);
 			shortTermScheduler.load(readyQueue, runningQueue);
 
 			for (CPU cpu : cpus) {
@@ -39,6 +39,6 @@ public class Driver {
 				PCB pcb = runningQueue.get(0);
 				cpu.run(pcb, terminatedQueue);
 			}
-		}
+		} while(newQueue.size() > 0 && readyQueue.size() > 0 && runningQueue.size() > 0);
 	}
 }
