@@ -2,9 +2,9 @@ package edu.spsu.cs3243;
 
 public class Disk 
 {
-	private static String [] disk;
-	private static int size;
-	private static int next_location;
+	private String [] disk;
+	private int size;
+	private int next_location;
 	private static Disk instance = null;
 	
 	public static Disk instance() {
@@ -29,22 +29,22 @@ public class Disk
 		next_location = 0;
 	}
 	
-	public static int size()
+	public int size()
 	{
 		return size;
 	}
 	
-	public static boolean empty()
+	public boolean empty()
 	{
 		return next_location == 0;
 	}
 	
-	public static boolean full()
+	public boolean full()
 	{
 		return next_location == size;
 	}
 	
-	public static int free ()
+	public int free ()
 	{
 		return 2048-size;
 	}
@@ -63,7 +63,7 @@ public class Disk
 		
 	}
 	
-	  public static void erase() 
+	  public void erase() 
 	  {
           for(int i = 0;i < disk.length; i++) {
                   disk[i]="00000000";     
@@ -73,7 +73,7 @@ public class Disk
 	  
 	  
 	  //Write to Disk
-	  public static int write(String word)
+	  public int write(String word)
 	  {
 		  if(full())
 		  {
@@ -90,7 +90,7 @@ public class Disk
 	  
 	  }
 	  
-	  public static String read(int address)
+	  public String read(int address)
 	  {
 		  if(address>2048)
 		  {
