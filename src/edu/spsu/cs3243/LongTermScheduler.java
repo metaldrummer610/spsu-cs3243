@@ -39,11 +39,11 @@ public class LongTermScheduler
 		{
 			if(instMemLoc == -1)
 			{
-				job.setinstMemLoc(RAM.instance().write(Disk.read(current)));
+				job.setinstMemLoc(RAM.instance().write(Disk.instance().read(current)));
 			}
 			else
 			{
-				RAM.instance().write(Disk.read(current));
+				RAM.instance().write(Disk.instance().read(current));
 			}
 			
 		}
@@ -52,12 +52,12 @@ public class LongTermScheduler
 		{
 			if(job.dataMemLoc == -1)
 			{
-				job.setinstMemLoc(RAM.instance().write(Disk.read(current)));
+				job.setinstMemLoc(RAM.instance().write(Disk.instance().read(current)));
 			}
 			
 			else
 			{
-				RAM.instance().write(Disk.read(current));
+				RAM.instance().write(Disk.instance().read(current));
 			}
 		}
 		
