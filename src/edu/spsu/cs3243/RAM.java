@@ -46,13 +46,14 @@ public class RAM {
 	}
 
 	public String toString() {
-		String temp = "Memory Dump: \n";
+		StringBuilder b = new StringBuilder();
+		b.append("Memory Dump: \n");
 		for (int i = 0; i < ram.length; i++) {
 			if (ram[i] != null) {
-				temp += ram[i] + "\n";
+				b.append(String.format("%d: %s\n", i, ram[i]));
 			}
 		}
-		return temp;
+		return b.toString();
 	}
 
 	// format hex string for RAM
