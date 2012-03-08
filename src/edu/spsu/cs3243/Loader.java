@@ -4,16 +4,18 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Loader 
 {
-	private File file1, file2;
+	private File file1;
 	private BufferedReader in;
+	private PCB newPCB = null;
+	private int processIndex, lines;
 
-	public void load() 
+	public void load(Disk d, ArrayList<PCB> unReadyQueue) 
 	{
 		file1 = new File("DataFile1.txt");
-		file2 = new File("DataFile2.txt");
 
 		try 
 		{
@@ -25,15 +27,22 @@ public class Loader
 				// TODO Send to PCB
 				if (input.contains("JOB")) 
 				{
-					process(input);
+					processIndex = process(input);
+					newPCB = unReadyQueue.get(processIndex);
 				} 
 				else if (input.contains("Data")) 
 				{
-					data(input);
+					lines = 0;
+					data(input, newPCB);
 				} 
 				else if (input.contains("END")) 
 				{
-
+					endData(newPCB, lines);
+				}
+				else if(input.length() > 0)
+				{
+					d.write(input.substring(2, 10));
+					lines++;
 				}
 			}
 			in.close();
@@ -44,10 +53,11 @@ public class Loader
 		}
 	}
 
-	private static void process(String s) 
+	private static int process(String s) 
 	{
 		String tempString;
 		int index, priority, size, id;
+		PCB tempJob = null;
 		String idNum, sizeHex;
 		index = s.indexOf('B');
 
@@ -63,10 +73,17 @@ public class Loader
 
 		tempString = s.substring(index + 1);
 		priority = Integer.parseInt(tempString, 16);
+		
+		tempJob.pid = id;
+		tempJob.priority = priority;
+		tempJob.processSize = size;
+		
+		Driver.newQueue.add(tempJob);
+		return Driver.newQueue.size()-1;
 
 	}
 
-	private static void data(String s) 
+	private static void data(String s, PCB p) 
 	{
 		int inBuff, outBuff, tempBuff, index;
 		String temp, out, in;
@@ -80,11 +97,15 @@ public class Loader
 
 		temp = temp.substring(index + 1);
 		tempBuff = Integer.parseInt(temp, 16);
+		
+		p.inputBufferSize = inBuff;
+		p.outputBufferSize = outBuff;
+		p.tempBufferSize = tempBuff;
 	}
 
-	private static void endData() 
+	private static void endData(PCB p, int l)
 	{
-
+		p.dataSize = l;
 	}
 
 }

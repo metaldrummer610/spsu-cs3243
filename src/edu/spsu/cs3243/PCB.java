@@ -1,6 +1,7 @@
 package edu.spsu.cs3243;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PCB 
 {
@@ -63,4 +64,23 @@ public class PCB
 		instMemLoc = i;
 	}
 
+	@Override
+	public String toString() {
+		return "PCB [pid=" + pid + ", processSize=" + processSize
+				+ ", priority=" + priority + ", inputBufferSize="
+				+ inputBufferSize + ", outputBufferSize=" + outputBufferSize
+				+ ", tempBufferSize=" + tempBufferSize + ", pc=" + pc
+				+ ", pageFaults=" + pageFaults + ", dataSize=" + dataSize
+				+ ", dataMemLoc=" + dataMemLoc + ", dataDiskLoc=" + dataDiskLoc
+				+ ", instMemLoc=" + instMemLoc + ", instDiskLoc=" + instDiskLoc
+				+ ", cyclesRan=" + cyclesRan + ", cyclesWaited=" + cyclesWaited
+				+ ", IOCount=" + IOCount + ", lastStateSwitch="
+				+ lastStateSwitch + ", realWaitTime=" + realWaitTime
+				+ ", realRunTime=" + realRunTime + ", faultTime=" + faultTime
+				+ ", inputBuffer=" + Arrays.toString(inputBuffer)
+				+ ", outputBuffer=" + Arrays.toString(outputBuffer)
+				+ ", tempBuffer=" + Arrays.toString(tempBuffer)
+				+ ", registers=" + Arrays.toString(registers) + ", pageTable="
+				+ pageTable + ", pageValidity=" + pageValidity + "]";
+	}
 }
