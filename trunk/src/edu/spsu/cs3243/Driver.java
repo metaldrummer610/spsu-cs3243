@@ -11,12 +11,19 @@ public class Driver {
 	private ProcessQueue readyQueue;
 	private ProcessQueue runningQueue;
 	private ProcessQueue terminatedQueue;
-	
+
 	public static void main(String args[]) {
 		new Driver().run(args);
 	}
 
 	public void run(String args[]) {
+		if (args.length != 1) {
+			System.out.println("program.jar file_path_to_data_file");
+			return;
+		}
+
+		String filename = args[0];
+
 		RAM.instance();
 		Disk.instance();
 		longTermScheduler = new LongTermScheduler();
@@ -29,7 +36,7 @@ public class Driver {
 		cpus = new ArrayList<CPU>();
 		cpus.add(new CPU());
 
-		Loader.load(newQueue);
+		Loader.load(newQueue, filename);
 		do {
 			longTermScheduler.load(newQueue, readyQueue);
 			shortTermScheduler.load(readyQueue, runningQueue);
@@ -39,6 +46,6 @@ public class Driver {
 				PCB pcb = runningQueue.get(0);
 				cpu.run(pcb, terminatedQueue);
 			}
-		} while(newQueue.size() > 0 && readyQueue.size() > 0 && runningQueue.size() > 0);
+		} while (newQueue.size() > 0 && readyQueue.size() > 0 && runningQueue.size() > 0);
 	}
 }

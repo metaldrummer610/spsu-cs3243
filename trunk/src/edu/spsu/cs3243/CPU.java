@@ -21,6 +21,7 @@ public class CPU {
 		 * the instructions 1. Take the instruction and convert it to a binary string 2. Pick apart the string to find all the different parts
 		 */
 
+		currentProcess = nextProcess;
 		pc = currentProcess.pc;
 
 		running = true;
@@ -41,7 +42,9 @@ public class CPU {
 			return;
 		}
 
-		switch (getInstructionType(binaryString)) {
+		int instructionType = getInstructionType(binaryString);
+
+		switch (instructionType) {
 		case 0:
 			doArithmatic(binaryString);
 			break;
@@ -219,7 +222,7 @@ public class CPU {
 			if (reg2 != 0) {
 				registers[reg2] = registers[reg1];
 			} else {
-				RAM.instance().write(Integer.toHexString(registers[reg1]), address);
+				RAM.instance().write(Integer.toHexString(registers[reg1]), currentProcess.instMemLoc +  address);
 			}
 			break;
 		}
@@ -228,55 +231,55 @@ public class CPU {
 	}
 
 	private int getInstructionType(String binaryString) {
-		return Integer.parseInt(binaryString.substring(0, 2));
+		return Integer.parseInt(binaryString.substring(0, 2), 2);
 	}
 
 	private int getOpcode(String binaryString) {
-		return Integer.parseInt(binaryString.substring(2, 6)); // This may possibly be wrong... Double check this
+		return Integer.parseInt(binaryString.substring(2, 6), 2); // This may possibly be wrong... Double check this
 	}
 
 	// Arithmatic opcode stuff
 	private int getArithSReg1(String binaryString) {
-		return Integer.parseInt(binaryString.substring(8, 4));
+		return Integer.parseInt(binaryString.substring(8, 12), 2);
 	}
 
 	private int getArithSReg2(String binaryString) {
-		return Integer.parseInt(binaryString.substring(12, 4));
+		return Integer.parseInt(binaryString.substring(12, 16), 2);
 	}
 
 	private int getArithDReg(String binaryString) {
-		return Integer.parseInt(binaryString.substring(16, 4));
+		return Integer.parseInt(binaryString.substring(16, 20), 2);
 	}
 
 	// Conditional Branch and Immediate opcode stuff
 	private int getCondBReg(String binaryString) {
-		return Integer.parseInt(binaryString.substring(8, 4));
+		return Integer.parseInt(binaryString.substring(8, 12), 2);
 	}
 
 	private int getCondDReg(String binaryString) {
-		return Integer.parseInt(binaryString.substring(12, 4));
+		return Integer.parseInt(binaryString.substring(12, 16), 2);
 	}
 
 	private int getCondAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(16, 16));
+		return Integer.parseInt(binaryString.substring(16, 32), 2);
 	}
 
 	// UnConditional Jump opcode stuff
 	private int getJumpAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(8, 24));
+		return Integer.parseInt(binaryString.substring(8, 24), 2);
 	}
 
 	// Input and Output opcode stuff
 	private int getIOReg1(String binaryString) {
-		return Integer.parseInt(binaryString.substring(8, 4));
+		return Integer.parseInt(binaryString.substring(8, 12), 2);
 	}
 
 	private int getIOReg2(String binaryString) {
-		return Integer.parseInt(binaryString.substring(12, 4));
+		return Integer.parseInt(binaryString.substring(12, 16), 2);
 	}
 
 	private int getIOAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(16, 16));
+		return Integer.parseInt(binaryString.substring(16, 32), 2);
 	}
 
 	/*

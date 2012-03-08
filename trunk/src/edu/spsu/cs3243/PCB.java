@@ -21,7 +21,7 @@ public class PCB
 		inputBufferSize = -1;
 		outputBufferSize = -1;
 		tempBufferSize = -1;
-		pc = -1;
+		pc = 0;
 		dataDiskLoc=-1;
 		instDiskLoc=-1;
 		dataSize=-1;
