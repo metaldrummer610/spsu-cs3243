@@ -1,17 +1,13 @@
 package edu.spsu.cs3243;
 
 public class ShortTermScheduler {
-	private ScheduleType type;
+	private static ScheduleType type = ScheduleType.FIFO;
 
 	public enum ScheduleType {
 		FIFO
 	}
 
-	public ShortTermScheduler() {
-		type = ScheduleType.FIFO;
-	}
-
-	public void load(ProcessQueue readyQueue, ProcessQueue runningQueue) {
+	public static void load(ProcessQueue readyQueue, ProcessQueue runningQueue) {
 		// Takes a process from the readyQueue and puts it on the runningQueue
 
 		switch (type) {

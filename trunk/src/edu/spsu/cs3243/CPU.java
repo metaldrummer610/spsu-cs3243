@@ -14,23 +14,32 @@ public class CPU {
 			registers[i] = 0;
 	}
 
-	public void run(PCB nextProcess, ProcessQueue terminatedQueue) {
+	public void run(PCB nextProcess, ProcessQueue runningQueue, ProcessQueue terminatedQueue) {
 		// Starts processing the next process
 		/*
 		 * Pretty much, this is what I need to do... 1. Get the address of the next instruction 2. Decode that instruction 3. Do what the instruction wants to do 4. Repeat Decoding
 		 * the instructions 1. Take the instruction and convert it to a binary string 2. Pick apart the string to find all the different parts
 		 */
+		
+		for (int i = 0; i < registers.length; i++)
+			registers[i] = 0;
 
+		nextProcess.pc = nextProcess.instMemLoc;
 		currentProcess = nextProcess;
-		pc = currentProcess.pc;
+		pc = currentProcess.instMemLoc;
 
 		running = true;
 		while (running) {
-			String binaryString = hexToBinary(RAM.instance().read(currentProcess.instMemLoc + pc));
+			String hex = RAM.instance().read(pc - currentProcess.instMemLoc);
+			String binaryString = hexToBinary(hex);
+			
+			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, pc);
 			executeInstruction(binaryString);
 		}
-
-		// TODO: Do we need any debugging or print outs here?
+		
+		Logger.log("PROCESS DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + currentProcess);
+		runningQueue.remove(nextProcess);
+		terminatedQueue.add(nextProcess);
 	}
 
 	public void executeInstruction(String binaryString) {
@@ -43,6 +52,8 @@ public class CPU {
 		}
 
 		int instructionType = getInstructionType(binaryString);
+		
+		Logger.log("Instruction type: %d", instructionType);
 
 		switch (instructionType) {
 		case 0:
@@ -64,10 +75,12 @@ public class CPU {
 	}
 
 	private void doArithmatic(String binaryString) {
+		Logger.log("Doing an arithmatic instruction!");
 		int opcode = getOpcode(binaryString);
 		int reg1 = getArithSReg1(binaryString);
 		int reg2 = getArithSReg2(binaryString);
 		int dReg = getArithDReg(binaryString);
+		Logger.log("IO args: opcode: %d. reg1: %d. reg2: %d. dReg: %d", opcode, reg1, reg2, dReg);
 
 		// 04 MOV R Transfers the content of one register into another
 		// 05 ADD R Adds content of two S-regs into D-reg
@@ -79,6 +92,7 @@ public class CPU {
 		// 10 SLT R Sets the D-reg to 1 if first S-reg is less than second B-reg, and 0 otherwise
 		switch (opcode) {
 		case 4: // MOV
+//			Logger.log("registers[reg1]: %d. registers[reg2]: %d", registers[reg1], registers[reg2]);
 			registers[reg1] = registers[reg2];
 			break;
 		case 5: // ADD
@@ -91,8 +105,10 @@ public class CPU {
 			registers[dReg] = registers[reg1] * registers[reg2];
 			break;
 		case 8: // DIV
-			if (registers[reg2] <= 0)
+			if (registers[reg2] <= 0) {
 				System.out.println("Divide by zero!!!"); // Probably need to add more information, like a memory dump or something...?
+				break;
+			}
 			registers[dReg] = registers[reg1] / registers[reg2];
 			break;
 		case 9: // AND
@@ -112,10 +128,12 @@ public class CPU {
 	}
 
 	private void doConditionalBranch(String binaryString) {
+		Logger.log("Doing a conditional branch instruction!");
 		int opcode = getOpcode(binaryString);
 		int bReg = getCondBReg(binaryString);
 		int dReg = getCondDReg(binaryString);
 		int address = getCondAddress(binaryString);
+		Logger.log("IO args: opcode: %d. bReg: %d. dReg: %d. address: %d", opcode, bReg, dReg, address);
 
 		// 02 ST I Stores content of a reg. into an address
 		// 03 LW I Loads the content of an address into a reg.
@@ -134,16 +152,16 @@ public class CPU {
 
 		switch (opcode) {
 		case 0x02: // ST
-			RAM.instance().write(RAM.hexFormat(Integer.toHexString(registers[bReg])), address);
+			RAM.instance().write(RAM.hexFormat(Integer.toHexString(registers[dReg])), address);
 			break;
 		case 0x03: // LW
-			registers[bReg] = Integer.parseInt(RAM.instance().read(address), 16);
+			registers[dReg] = Integer.parseInt(RAM.instance().read(address), 16);
 			break;
 		case 0x0B: // MOVI
 			if (address != 0)
 				registers[dReg] = address;
 			else
-				registers[bReg] = registers[dReg];
+				registers[dReg] = registers[bReg];
 			break;
 		case 0x0C: // ADDI
 			registers[dReg] += address;
@@ -152,6 +170,10 @@ public class CPU {
 			registers[dReg] *= address;
 			break;
 		case 0x0E: // DIVI
+			if (address <= 0) {
+				System.out.println("Divide by zero!!!"); // Probably need to add more information, like a memory dump or something...?
+				break;
+			}
 			registers[dReg] /= address;
 			break;
 		case 0x0F: // LDI
@@ -192,19 +214,23 @@ public class CPU {
 	}
 
 	private void doUnconditionalJump(String binaryString) {
+		Logger.log("Doing an unconditional jump instruction!");
 		int opcode = getOpcode(binaryString);
 		int jumpAddress = getJumpAddress(binaryString);
-
+		Logger.log("IO args: opcode: %d. jumpAddress: %d.", opcode, jumpAddress);
+		
 		if (opcode == 0x14) {
 			pc = jumpAddress; // TODO: Verify that this is correct
 		}
 	}
 
 	private void doIO(String binaryString) {
+		Logger.log("Doing an IO instruction!");
 		int opcode = getOpcode(binaryString);
 		int reg1 = getIOReg1(binaryString);
 		int reg2 = getIOReg2(binaryString);
 		int address = getIOAddress(binaryString);
+		Logger.log("IO args: opcode: %d. reg1: %d. reg2: %d. address: %d", opcode, reg1, reg2, address);
 		// 00 RD I/O Reads content of I/P buffer into a accumulator
 		// 01 WR I/O Writes the content of accumulator into O/P buffer
 
@@ -214,7 +240,10 @@ public class CPU {
 			if (reg2 != 0) {
 				registers[reg1] = registers[reg2];
 			} else {
-				registers[reg1] = Integer.parseInt(RAM.instance().read(currentProcess.instMemLoc + address), 16);
+				String read = RAM.instance().read(currentProcess.instMemLoc + address);
+				int i = Integer.parseInt(read, 16);
+				Logger.log("Read from RAM: %s. As int: %d", read, i);
+				registers[reg1] = i;
 			}
 			break;
 		case 0x01: // WR
@@ -222,7 +251,8 @@ public class CPU {
 			if (reg2 != 0) {
 				registers[reg2] = registers[reg1];
 			} else {
-				RAM.instance().write(Integer.toHexString(registers[reg1]), currentProcess.instMemLoc +  address);
+				String hex = Integer.toHexString(registers[reg1]);
+				RAM.instance().write(hex, currentProcess.instMemLoc +  address);
 			}
 			break;
 		}
@@ -235,7 +265,7 @@ public class CPU {
 	}
 
 	private int getOpcode(String binaryString) {
-		return Integer.parseInt(binaryString.substring(2, 6), 2); // This may possibly be wrong... Double check this
+		return Integer.parseInt(binaryString.substring(2, 8), 2); // This may possibly be wrong... Double check this
 	}
 
 	// Arithmatic opcode stuff
@@ -261,12 +291,15 @@ public class CPU {
 	}
 
 	private int getCondAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(16, 32), 2);
+		int i = Integer.parseInt(binaryString.substring(16, 32), 2);
+		if(i != 1)
+			i /= 4;
+		return i;
 	}
 
 	// UnConditional Jump opcode stuff
 	private int getJumpAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(8, 24), 2);
+		return Integer.parseInt(binaryString.substring(8, 32), 2) / 4;
 	}
 
 	// Input and Output opcode stuff
@@ -279,7 +312,7 @@ public class CPU {
 	}
 
 	private int getIOAddress(String binaryString) {
-		return Integer.parseInt(binaryString.substring(16, 32), 2);
+		return Integer.parseInt(binaryString.substring(16, 32), 2) / 4;
 	}
 
 	/*

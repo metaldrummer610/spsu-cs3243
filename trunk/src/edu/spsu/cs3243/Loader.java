@@ -39,6 +39,7 @@ public class Loader {
 					
 					if(instructionStart) {
 						newPCB.instDiskLoc = location;
+						newPCB.pc = location;
 						instructionStart = false;
 					}
 					
