@@ -15,12 +15,6 @@ public class CPU {
 	}
 
 	public void run(PCB nextProcess, ProcessQueue runningQueue, ProcessQueue terminatedQueue) {
-		// Starts processing the next process
-		/*
-		 * Pretty much, this is what I need to do... 1. Get the address of the next instruction 2. Decode that instruction 3. Do what the instruction wants to do 4. Repeat Decoding
-		 * the instructions 1. Take the instruction and convert it to a binary string 2. Pick apart the string to find all the different parts
-		 */
-		
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
 
@@ -30,7 +24,7 @@ public class CPU {
 
 		running = true;
 		while (running) {
-			String hex = RAM.instance().read(pc - currentProcess.instMemLoc);
+			String hex = RAM.instance().read(pc);
 			String binaryString = hexToBinary(hex);
 			
 			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, pc);
@@ -92,7 +86,6 @@ public class CPU {
 		// 10 SLT R Sets the D-reg to 1 if first S-reg is less than second B-reg, and 0 otherwise
 		switch (opcode) {
 		case 4: // MOV
-//			Logger.log("registers[reg1]: %d. registers[reg2]: %d", registers[reg1], registers[reg2]);
 			registers[reg1] = registers[reg2];
 			break;
 		case 5: // ADD
@@ -106,7 +99,7 @@ public class CPU {
 			break;
 		case 8: // DIV
 			if (registers[reg2] <= 0) {
-				System.out.println("Divide by zero!!!"); // Probably need to add more information, like a memory dump or something...?
+				System.out.println("Divide by zero!!!");
 				break;
 			}
 			registers[dReg] = registers[reg1] / registers[reg2];
@@ -171,7 +164,7 @@ public class CPU {
 			break;
 		case 0x0E: // DIVI
 			if (address <= 0) {
-				System.out.println("Divide by zero!!!"); // Probably need to add more information, like a memory dump or something...?
+				System.out.println("Divide by zero!!!");
 				break;
 			}
 			registers[dReg] /= address;
@@ -220,7 +213,7 @@ public class CPU {
 		Logger.log("IO args: opcode: %d. jumpAddress: %d.", opcode, jumpAddress);
 		
 		if (opcode == 0x14) {
-			pc = jumpAddress; // TODO: Verify that this is correct
+			pc = jumpAddress;
 		}
 	}
 
@@ -236,7 +229,6 @@ public class CPU {
 
 		switch (opcode) {
 		case 0x00: // RD
-			// TODO: Finish when you figure it out
 			if (reg2 != 0) {
 				registers[reg1] = registers[reg2];
 			} else {
@@ -247,7 +239,6 @@ public class CPU {
 			}
 			break;
 		case 0x01: // WR
-			// TODO: Finish when you figure it out
 			if (reg2 != 0) {
 				registers[reg2] = registers[reg1];
 			} else {
@@ -265,7 +256,7 @@ public class CPU {
 	}
 
 	private int getOpcode(String binaryString) {
-		return Integer.parseInt(binaryString.substring(2, 8), 2); // This may possibly be wrong... Double check this
+		return Integer.parseInt(binaryString.substring(2, 8), 2);
 	}
 
 	// Arithmatic opcode stuff

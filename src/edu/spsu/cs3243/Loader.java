@@ -22,7 +22,6 @@ public class Loader {
 			
 			String input;
 			while ((input = in.readLine()) != null) {
-				// TODO Send to PCB
 				if (input.contains("JOB")) {
 					processIndex = process(input, newQueue);
 					newPCB = newQueue.get(processIndex);
