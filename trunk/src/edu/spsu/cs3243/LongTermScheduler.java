@@ -1,5 +1,7 @@
 package edu.spsu.cs3243;
 
+import java.util.ArrayList;
+
 public class LongTermScheduler {
 	public static void load(ProcessQueue newQueue, ProcessQueue readyQueue) {
 		if (!loadProcess(newQueue)) {
@@ -7,11 +9,12 @@ public class LongTermScheduler {
 			return;
 		}
 
+		ArrayList<PCB> processes = new ArrayList<PCB>();
 		for (int j = 0; j < newQueue.processes.size(); j++) {
 			PCB job = newQueue.processes.get(j);
 			if (job.processSize + job.dataSize > RAM.instance().free()) {
 				System.out.println("No RAM left");
-				return;
+				break;
 			}
 
 			for (int current = job.instDiskLoc, i = job.processSize; i > 0; i--, current++) {
@@ -31,9 +34,11 @@ public class LongTermScheduler {
 				}
 			}
 			
-			readyQueue.add(job);
-			newQueue.remove(job);
+			processes.add(job);
 		}
+		
+		newQueue.processes.removeAll(processes);
+		readyQueue.processes.addAll(processes);
 	}
 
 	private static boolean loadProcess(ProcessQueue newQueue) {

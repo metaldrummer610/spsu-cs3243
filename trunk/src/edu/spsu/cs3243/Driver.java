@@ -35,6 +35,12 @@ public class Driver {
 		Loader.load(newQueue, filename);
 		do {
 			LongTermScheduler.load(newQueue, readyQueue);
+			// Double check to see if we need to clear the RAM and put more processes into it...
+			if(readyQueue.processes.isEmpty()) {
+				RAM.instance().erase();
+				continue;
+			}
+			
 			ShortTermScheduler.load(readyQueue, runningQueue);
 
 			for (CPU cpu : cpus) {
