@@ -13,7 +13,7 @@ public class ProcessQueue {
 	public void add(PCB pcb) {
 		processes.add(pcb);
 	}
-	
+
 	public void remove(PCB pcb) {
 		processes.remove(pcb);
 	}
@@ -21,11 +21,18 @@ public class ProcessQueue {
 	public PCB get(int index) {
 		return processes.get(index);
 	}
-	
-	public int size()
-	{
+
+	public int size() {
 		return processes.size();
 	}
-	
-	
+
+	public int largestJob() {
+		int ret = Integer.MIN_VALUE;
+		for(PCB p : processes) {
+			if(ret < (p.dataSize + p.processSize))
+				ret = (p.dataSize + p.processSize);
+		}
+		
+		return ret;
+	}
 }

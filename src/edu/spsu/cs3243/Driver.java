@@ -29,10 +29,10 @@ public class Driver {
 		runningQueue = new ProcessQueue();
 		terminatedQueue = new ProcessQueue();
 
-		cpus = new ArrayList<CPU>();
-		cpus.add(new CPU());
-
 		Loader.load(newQueue, filename);
+		
+		cpus = new ArrayList<CPU>();
+		cpus.add(new CPU(newQueue.largestJob()));
 		do {
 			LongTermScheduler.load(newQueue, readyQueue);
 			// Double check to see if we need to clear the RAM and put more processes into it...
