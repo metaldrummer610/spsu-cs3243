@@ -38,6 +38,10 @@ public class PCB
 		faultTime=0;
 		lastStateSwitch=0;
 	}
+	
+	public int getSize() {
+		return processSize + dataSize;
+	}
 
 	@Override
 	public String toString() {

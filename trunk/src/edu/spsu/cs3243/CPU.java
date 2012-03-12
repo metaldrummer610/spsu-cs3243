@@ -3,28 +3,43 @@ package edu.spsu.cs3243;
 public class CPU {
 	private PCB currentProcess;
 	private int[] registers;
+	private String[] cache;
 	private int pc;
 	private boolean running;
 
-	public CPU() {
+	public CPU(int largestSize) {
 		currentProcess = null;
 		registers = new int[16];
+		cache = new String[largestSize];
 
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
+		
+		for (int i = 0; i < cache.length; i++)
+			cache[i] = "00000000";
 	}
 
 	public void run(PCB nextProcess, ProcessQueue runningQueue, ProcessQueue terminatedQueue) {
+		// Setup the CPU before the process is run
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
+
+		int start = nextProcess.instMemLoc, end = start + nextProcess.getSize();
+		for (int i = 0; i < cache.length; i++) {
+			if (i < end - start)
+				cache[i] = RAM.hexFormat(RAM.instance().read(start + i));
+			else
+				cache[i] = "00000000";
+		}
 
 		nextProcess.pc = nextProcess.instMemLoc;
 		currentProcess = nextProcess;
 		pc = currentProcess.instMemLoc;
 
+		// Run the process
 		running = true;
 		while (running) {
-			String hex = RAM.instance().read(pc);
+			String hex = cache[pc - currentProcess.instMemLoc];
 			String binaryString = hexToBinary(hex);
 			
 			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, pc);
@@ -145,10 +160,13 @@ public class CPU {
 
 		switch (opcode) {
 		case 0x02: // ST
-			RAM.instance().write(RAM.hexFormat(Integer.toHexString(registers[dReg])), address);
+			if(dReg != 0) 
+				cache[registers[dReg]] = RAM.hexFormat(Integer.toHexString(registers[bReg]));
+			else
+				cache[address] = RAM.hexFormat(Integer.toHexString(registers[bReg]));
 			break;
 		case 0x03: // LW
-			registers[dReg] = Integer.parseInt(RAM.instance().read(address), 16);
+			registers[dReg] = Integer.parseInt(cache[registers[bReg]], 16);
 			break;
 		case 0x0B: // MOVI
 			if (address != 0)
@@ -230,9 +248,9 @@ public class CPU {
 		switch (opcode) {
 		case 0x00: // RD
 			if (reg2 != 0) {
-				registers[reg1] = registers[reg2];
+				registers[reg1] = Integer.parseInt(cache[registers[reg2]]);
 			} else {
-				String read = RAM.instance().read(currentProcess.instMemLoc + address);
+				String read = cache[address];
 				int i = Integer.parseInt(read, 16);
 				Logger.log("Read from RAM: %s. As int: %d", read, i);
 				registers[reg1] = i;
@@ -240,10 +258,10 @@ public class CPU {
 			break;
 		case 0x01: // WR
 			if (reg2 != 0) {
-				registers[reg2] = registers[reg1];
+				cache[registers[reg2]] = RAM.hexFormat(Integer.toHexString(registers[reg1]));
 			} else {
-				String hex = Integer.toHexString(registers[reg1]);
-				RAM.instance().write(hex, currentProcess.instMemLoc +  address);
+				String hex = RAM.hexFormat(Integer.toHexString(registers[reg1]));
+				cache[address] = hex;
 			}
 			break;
 		}
