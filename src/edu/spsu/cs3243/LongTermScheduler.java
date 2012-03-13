@@ -3,12 +3,7 @@ package edu.spsu.cs3243;
 import java.util.ArrayList;
 
 public class LongTermScheduler {
-	
-	private static double percent;
-	private static double average;
-	private static double totalPercent;
-	private static double sumPercent;
-	
+
 	public static void load(ProcessQueue newQueue, ProcessQueue readyQueue) {
 		if (!loadProcess(newQueue)) {
 			System.out.println("Done");
@@ -39,10 +34,10 @@ public class LongTermScheduler {
 					RAM.instance().write(Disk.instance().read(current));
 				}
 			}
-			
+
 			processes.add(job);
 		}
-		
+
 		newQueue.processes.removeAll(processes);
 		readyQueue.processes.addAll(processes);
 	}
@@ -54,21 +49,4 @@ public class LongTermScheduler {
 			return false;
 		}
 	}
-	
-	private static void percentageRAM(int avg) {
-		switch (avg)
-        {
-                case 0:
-                        average=(RAM.instance().size()-RAM.instance().free());
-                        percent=average/RAM.instance().size();             
-                        System.out.println("Percentage of RAM used: " +percent*100);
-                        break;
-                /*case 1:
-                        totalPercent=sumPercent/totalCycleCounter;
-                        System.out.println("Total percentage used on RAM:   " + totalPercent*100);
-                        break;*/
-        }
-
-	}
-
 }

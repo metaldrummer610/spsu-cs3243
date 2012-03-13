@@ -6,11 +6,16 @@ public class CPU {
 	private String[] cache;
 	private int pc;
 	private boolean running;
+	private int totalCacheUsed;
+	private int totalCyclesRun;
+	private long totalTimeRunning;
 
 	public CPU(int largestSize) {
 		currentProcess = null;
 		registers = new int[16];
 		cache = new String[largestSize];
+		totalCacheUsed = 0;
+		totalCyclesRun = 0;
 
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
@@ -39,6 +44,7 @@ public class CPU {
 		currentProcess = nextProcess;
 		pc = currentProcess.instMemLoc;
 
+		long startTime = System.currentTimeMillis();
 		// Run the process
 		running = true;
 		while (running) {
@@ -47,11 +53,40 @@ public class CPU {
 			
 			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, pc);
 			executeInstruction(binaryString);
+			currentProcess.cyclesRan++;
 		}
 		
+		long endTime = System.currentTimeMillis();
+		
 		Logger.log("PROCESS DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + currentProcess);
-		runningQueue.remove(nextProcess);
-		terminatedQueue.add(nextProcess);
+		
+		int cacheUsed = 0;
+		for (int i = 0; i < cache.length; i++) {
+			if (!cache[i].equals("00000000"))
+				++cacheUsed;
+		}
+		totalCacheUsed += cacheUsed;
+		
+		totalCyclesRun += currentProcess.cyclesRan;
+		
+		currentProcess.realRunTime = endTime - startTime;
+		
+		totalTimeRunning += endTime - startTime;
+        
+		runningQueue.remove(currentProcess);
+		terminatedQueue.add(currentProcess);
+	}
+	
+	public int getTotalCacheUsed() {
+		return totalCacheUsed;
+	}
+	
+	public int getTotalCyclesRun() {
+		return totalCyclesRun;
+	}
+	
+	public long getTotalTimeRunning() {
+		return totalTimeRunning;
 	}
 
 	public void executeInstruction(String binaryString) {
@@ -248,6 +283,7 @@ public class CPU {
 		// 00 RD I/O Reads content of I/P buffer into a accumulator
 		// 01 WR I/O Writes the content of accumulator into O/P buffer
 
+		currentProcess.IOCount++;
 		switch (opcode) {
 		case 0x00: // RD
 			if (reg2 != 0) {

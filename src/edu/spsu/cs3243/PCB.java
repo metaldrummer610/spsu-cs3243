@@ -1,6 +1,5 @@
 package edu.spsu.cs3243;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PCB 
@@ -9,9 +8,6 @@ public class PCB
 	dataDiskLoc, instMemLoc, instDiskLoc, cyclesRan, cyclesWaited, IOCount;
 	long lastStateSwitch, realWaitTime, realRunTime, faultTime;
 	String[] inputBuffer, outputBuffer, tempBuffer;
-	int[] registers;
-	ArrayList<Integer> pageTable;
-	ArrayList<Boolean> pageValidity;
 	
 	public PCB()
 	{
@@ -32,8 +28,6 @@ public class PCB
 		realRunTime=0;
 		realWaitTime=0;
 		IOCount=0;
-		pageTable=new ArrayList<Integer>();
-		pageValidity=new ArrayList<Boolean>();
 		pageFaults=0;
 		faultTime=0;
 		lastStateSwitch=0;
@@ -58,8 +52,6 @@ public class PCB
 				+ ", realRunTime=" + realRunTime + ", faultTime=" + faultTime
 				+ ", inputBuffer=" + Arrays.toString(inputBuffer)
 				+ ", outputBuffer=" + Arrays.toString(outputBuffer)
-				+ ", tempBuffer=" + Arrays.toString(tempBuffer)
-				+ ", registers=" + Arrays.toString(registers) + ", pageTable="
-				+ pageTable + ", pageValidity=" + pageValidity + "]";
+				+ ", tempBuffer=" + Arrays.toString(tempBuffer) + "]";
 	}
 }

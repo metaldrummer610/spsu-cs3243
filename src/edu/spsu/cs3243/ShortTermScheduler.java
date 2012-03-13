@@ -12,10 +12,12 @@ public class ShortTermScheduler {
 
 		switch (type) {
 		case FIFO:
-			PCB p = readyQueue.processes.get(0);
-			runningQueue.processes.add(p);
-			readyQueue.processes.remove(p);
-			break;
+			if (!readyQueue.processes.isEmpty()) {
+				PCB p = readyQueue.processes.get(0);
+				runningQueue.processes.add(p);
+				readyQueue.processes.remove(p);
+				break;
+			}
 		}
 	}
 }
