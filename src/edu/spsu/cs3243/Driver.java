@@ -12,7 +12,8 @@ public class Driver {
 	private double percent = 0;
 	private double average = 0;
 	private double totalPercent = 0;
-	private double sumPercent = 0;
+	//sum percent is the percentage of ram that is filled total(overall % use)
+	//private double sumPercent;
 
 	public static void main(String args[]) {
 		new Driver().run(args);
@@ -86,8 +87,8 @@ public class Driver {
 			Logger.log("Percentage of RAM used: " + percent * 100);
 			break;
 		case 1:
-			//TODO: Kevin: Please make this work properly. I am passing in the totalCycleCounter, but WTF is sumPercent?
-			totalPercent = sumPercent / totalCycleCounter;
+			average = (RAM.instance().size() - RAM.instance().free());
+			totalPercent = average / totalCycleCounter;
 			Logger.log("Total percentage used on RAM:   " + totalPercent * 100);
 			break;
 		}
