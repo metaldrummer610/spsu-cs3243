@@ -9,6 +9,10 @@ public class Driver {
 	private ProcessQueue readyQueue;
 	private ProcessQueue runningQueue;
 	private ProcessQueue terminatedQueue;
+	private double percent = 0;
+	private double average = 0;
+	private double totalPercent = 0;
+	private double sumPercent = 0;
 
 	public static void main(String args[]) {
 		new Driver().run(args);
@@ -33,10 +37,14 @@ public class Driver {
 		
 		cpus = new ArrayList<CPU>();
 		cpus.add(new CPU(newQueue.largestJob()));
+		
+		long startTime = System.currentTimeMillis();
 		do {
 			LongTermScheduler.load(newQueue, readyQueue);
 			// Double check to see if we need to clear the RAM and put more processes into it...
 			if(readyQueue.processes.isEmpty()) {
+				percentageRAM(0, cpus.get(0).getTotalCyclesRun());
+				percentageRAM(1, cpus.get(0).getTotalCyclesRun());
 				RAM.instance().erase();
 				continue;
 			}
@@ -47,7 +55,42 @@ public class Driver {
 				// Grab the next process off the running queue
 				PCB pcb = runningQueue.get(0);
 				cpu.run(pcb, runningQueue, terminatedQueue);
+				
+				for(PCB p : readyQueue.processes) {
+					p.realWaitTime = cpu.getTotalTimeRunning();
+					p.cyclesWaited = cpu.getTotalCyclesRun();
+				}
 			}
 		} while (newQueue.size() > 0 || readyQueue.size() > 0 || runningQueue.size() > 0);
+		
+		long endTime = System.currentTimeMillis();
+		
+		long runningTime = endTime - startTime;
+		
+		percentageRAM(0, cpus.get(0).getTotalCyclesRun());
+		percentageRAM(1, cpus.get(0).getTotalCyclesRun());
+		Logger.log("Run time: %d", runningTime);
+		
+		Logger.log("Process dump:");
+		
+		for(PCB p : terminatedQueue.processes) {
+			Logger.log(p.toString());
+		}
+	}
+	
+	public void percentageRAM(int avg, int totalCycleCounter) {
+		switch (avg) {
+		case 0:
+			average = (RAM.instance().size() - RAM.instance().free());
+			percent = average / RAM.instance().size();
+			Logger.log("Percentage of RAM used: " + percent * 100);
+			break;
+		case 1:
+			//TODO: Kevin: Please make this work properly. I am passing in the totalCycleCounter, but WTF is sumPercent?
+			totalPercent = sumPercent / totalCycleCounter;
+			Logger.log("Total percentage used on RAM:   " + totalPercent * 100);
+			break;
+		}
+
 	}
 }
