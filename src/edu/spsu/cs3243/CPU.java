@@ -23,6 +23,9 @@ public class CPU {
 		// Setup the CPU before the process is run
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
+		
+		for (int i = 0; i < cache.length; i++)
+			cache[i] = "00000000";
 
 		int start = nextProcess.instMemLoc, end = start + nextProcess.getSize();
 		for (int i = 0; i < cache.length; i++) {
@@ -248,7 +251,7 @@ public class CPU {
 		switch (opcode) {
 		case 0x00: // RD
 			if (reg2 != 0) {
-				registers[reg1] = Integer.parseInt(cache[registers[reg2]]);
+				registers[reg1] = Integer.parseInt(cache[registers[reg2]], 16);
 			} else {
 				String read = cache[address];
 				int i = Integer.parseInt(read, 16);
