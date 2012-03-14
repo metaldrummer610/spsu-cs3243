@@ -41,12 +41,13 @@ public class Driver {
 		
 		long startTime = System.currentTimeMillis();
 		do {
-			LongTermScheduler.load(newQueue, readyQueue);
 			// Double check to see if we need to clear the RAM and put more processes into it...
-			if(readyQueue.processes.isEmpty()) {
+			if(readyQueue.processes.isEmpty() && !newQueue.processes.isEmpty()) {
 				percentageRAM(0, cpus.get(0).getTotalCyclesRun());
 				percentageRAM(1, cpus.get(0).getTotalCyclesRun());
+				
 				RAM.instance().erase();
+				LongTermScheduler.load(newQueue, readyQueue);
 				continue;
 			}
 			
@@ -58,6 +59,11 @@ public class Driver {
 				cpu.run(pcb, runningQueue, terminatedQueue);
 				
 				for(PCB p : readyQueue.processes) {
+					p.realWaitTime = cpu.getTotalTimeRunning();
+					p.cyclesWaited = cpu.getTotalCyclesRun();
+				}
+				
+				for(PCB p : newQueue.processes) {
 					p.realWaitTime = cpu.getTotalTimeRunning();
 					p.cyclesWaited = cpu.getTotalCyclesRun();
 				}
@@ -75,8 +81,10 @@ public class Driver {
 		Logger.log("Process dump:");
 		
 		for(PCB p : terminatedQueue.processes) {
-			Logger.log(p.toString());
+//			Logger.log(p.toString());
+			Logger.log("%d\t%d", p.realRunTime, p.realWaitTime);
 		}
+		Logger.log("%d", cpus.get(0).getTotalTimeRunning());
 	}
 	
 	public void percentageRAM(int avg, int totalCycleCounter) {
