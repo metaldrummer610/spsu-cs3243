@@ -4,7 +4,9 @@ import java.util.ArrayList;
 
 public class LongTermScheduler {
 
-	public static void load(ProcessQueue newQueue, ProcessQueue readyQueue) {
+	public static void load() {
+		ProcessQueue newQueue = Driver.getNewQueue();
+		ProcessQueue readyQueue = Driver.getReadyQueue();
 		if (!loadProcess(newQueue)) {
 			System.out.println("Done");
 			return;

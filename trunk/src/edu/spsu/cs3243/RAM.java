@@ -8,7 +8,7 @@ public class RAM {
 
 	private static RAM instance = null;
 
-	public static RAM instance() {
+	public static synchronized RAM instance() {
 		if (instance == null) {
 			instance = new RAM();
 		}

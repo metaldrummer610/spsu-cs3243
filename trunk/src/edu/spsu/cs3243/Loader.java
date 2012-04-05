@@ -11,7 +11,8 @@ public class Loader {
 	private static PCB newPCB = null;
 	private static int processIndex, lines;
 
-	public static void load(ProcessQueue newQueue, String fileLocation) {
+	public static void load(String fileLocation) {
+		ProcessQueue newQueue = Driver.getNewQueue();
 		file1 = new File(fileLocation);
 
 		try {
