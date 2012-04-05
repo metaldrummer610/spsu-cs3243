@@ -22,7 +22,7 @@ public class Logger {
 			f.delete();
 	}
 
-	public static void log(String format, Object... args) {
+	public static synchronized void log(String format, Object... args) {
 		if (LOGGING_ENABLED) {
 			switch (type) {
 			case SOUT:

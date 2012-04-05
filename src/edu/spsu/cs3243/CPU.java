@@ -1,6 +1,8 @@
 package edu.spsu.cs3243;
 
-public class CPU {
+import java.util.ArrayList;
+
+public class CPU extends Thread {
 	private PCB currentProcess;
 	private int[] registers;
 	private String[] cache;
@@ -9,6 +11,7 @@ public class CPU {
 	private int totalCacheUsed;
 	private int totalCyclesRun;
 	private long totalTimeRunning;
+	private boolean threadRunning;
 
 	public CPU(int largestSize) {
 		currentProcess = null;
@@ -23,8 +26,37 @@ public class CPU {
 		for (int i = 0; i < cache.length; i++)
 			cache[i] = "00000000";
 	}
+	
+	@Override
+	public void run() {
+		super.run();
+		ArrayList<PCB> pcbs = new ArrayList<PCB>();
+		
+		threadRunning = true;
+		while(threadRunning) {
+			PCB next = ShortTermScheduler.scheduleNextProcess();
+			
+			if(next != null) {
+				pcbs.add(next);
+				runProcess(next);
+				
+				Driver.getRunningQueue().remove(next);
+				Driver.getTerminatedQueue().add(next);
+			} else {
+				Logger.log("Huh... the sts returned null for some reason...");
+				threadRunning = false;
+			}
+		}
+		
+		synchronized(Logger.class) {
+			Logger.log("CPU %d ran the following processes:", this.getId());
+			for(PCB p : pcbs) {
+				Logger.log(p.toString());
+			}
+		}
+	}
 
-	public void run(PCB nextProcess, ProcessQueue runningQueue, ProcessQueue terminatedQueue) {
+	public void runProcess(PCB nextProcess) {
 		// Setup the CPU before the process is run
 		for (int i = 0; i < registers.length; i++)
 			registers[i] = 0;
@@ -72,9 +104,6 @@ public class CPU {
 		currentProcess.realRunTime = endTime - startTime;
 		
 		totalTimeRunning += endTime - startTime;
-        
-		runningQueue.remove(currentProcess);
-		terminatedQueue.add(currentProcess);
 	}
 	
 	public int getTotalCacheUsed() {

@@ -7,7 +7,9 @@ public class ShortTermScheduler {
 		FIFO
 	}
 
-	public static void load(ProcessQueue readyQueue, ProcessQueue runningQueue) {
+	public static synchronized PCB scheduleNextProcess() {
+		ProcessQueue readyQueue = Driver.getReadyQueue();
+		ProcessQueue runningQueue = Driver.getRunningQueue();
 		// Takes a process from the readyQueue and puts it on the runningQueue
 
 		switch (type) {
@@ -16,8 +18,10 @@ public class ShortTermScheduler {
 				PCB p = readyQueue.processes.get(0);
 				runningQueue.processes.add(p);
 				readyQueue.processes.remove(p);
-				break;
+				return p;
 			}
 		}
+
+		return null;
 	}
 }
