@@ -15,7 +15,7 @@ public class LongTermScheduler {
 		ArrayList<PCB> processes = new ArrayList<PCB>();
 		for (int j = 0; j < newQueue.processes.size(); j++) {
 			PCB job = newQueue.processes.get(j);
-			if (job.processSize + job.dataSize > RAM.instance().free()) {
+			if (((4*2) > RAM.instance().freeFrames())) {
 				System.out.println("No RAM left");
 				break;
 			}
