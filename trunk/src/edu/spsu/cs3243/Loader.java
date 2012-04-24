@@ -20,7 +20,9 @@ public class Loader {
 
 			boolean instructionStart = false;
 			boolean dataStart = false;
-			
+
+			int currentPage = -1;
+			int currentOffset = 0;
 			String input;
 			while ((input = in.readLine()) != null) {
 				if (input.contains("JOB")) {
@@ -34,19 +36,30 @@ public class Loader {
 				} else if (input.contains("END")) {
 					endData(newPCB, lines);
 				} else if (input.length() > 0) {
-					int location = Disk.instance().write(input.substring(2, 10));
+					if (currentPage == -1 || currentOffset >= Driver.WORDS_PER_PAGE) {
+						currentPage = MemoryManager.disk().nextFrame();
+						currentOffset = 0;
+					}
+
+					MemoryManager.disk().write(input.substring(2, 10), currentPage * Driver.WORDS_PER_PAGE, currentOffset);
 					lines++;
-					
-					if(instructionStart) {
-						newPCB.instDiskLoc = location;
-						newPCB.pc = location;
+
+					if (instructionStart) {
+						newPCB.instDiskLoc = (currentPage * Driver.WORDS_PER_PAGE) + currentOffset;
+//						newPCB.pc = (currentPage * Driver.WORDS_PER_PAGE) + currentOffset;
 						instructionStart = false;
 					}
-					
-					if(dataStart) {
-						newPCB.dataDiskLoc = location;
+
+					if (dataStart) {
+						newPCB.dataDiskLoc = (currentPage * Driver.WORDS_PER_PAGE) + currentOffset;
 						dataStart = false;
 					}
+
+					currentOffset++;
+					
+					// We have to manually mark this page as being full because of the way the data is being read in
+					if(currentOffset >= Driver.WORDS_PER_PAGE)
+						MemoryManager.disk().markFrameFull(currentPage);
 				}
 			}
 			in.close();

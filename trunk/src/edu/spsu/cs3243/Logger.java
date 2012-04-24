@@ -9,7 +9,7 @@ public class Logger {
 
 	private static boolean LOGGING_ENABLED = true;
 
-	private static LogType type = LogType.FILE;
+	private static LogType type = LogType.SOUT;
 	private static String FILENAME = "output.log";
 
 	public enum LogType {

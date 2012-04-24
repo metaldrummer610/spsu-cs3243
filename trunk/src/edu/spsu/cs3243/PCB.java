@@ -1,14 +1,15 @@
 package edu.spsu.cs3243;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class PCB {
 	int pid, processSize, priority, inputBufferSize, outputBufferSize, tempBufferSize, pc, pageFaults, dataSize, dataMemLoc, dataDiskLoc, instMemLoc, instDiskLoc, cyclesRan, cyclesWaited, IOCount;
 	long lastStateSwitch, realWaitTime, realRunTime, faultTime;
 	String[] inputBuffer, outputBuffer, tempBuffer;
-	ArrayList<Integer> pageTable; // This contains all the indices of the pages we own.
-	ArrayList<Boolean> pageFaultTable; // This lets us know if a specific page we own has been faulted
+	HashMap<Integer, Integer> pageTable; // This contains all the indices of the pages we own.
+	HashMap<Integer, Boolean> pageFaultTable; // This lets us know if a specific page we own has been faulted
+	int[] registers;
 
 	public PCB() {
 		pid = -1;
@@ -31,8 +32,10 @@ public class PCB {
 		pageFaults = 0;
 		faultTime = 0;
 		lastStateSwitch = 0;
-		pageTable = new ArrayList<Integer>();
-		pageFaultTable = new ArrayList<Boolean>();
+		pageTable = new HashMap<Integer, Integer>();
+		pageFaultTable = new HashMap<Integer, Boolean>();
+		registers = new int[Driver.NUM_REGISTERS];
+		Arrays.fill(registers, 0);
 	}
 
 	public int getSize() {
