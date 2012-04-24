@@ -6,6 +6,8 @@ public class CPU extends Thread {
 	private PCB currentProcess;
 	private int[] registers;
 	private String[] cache;
+	private boolean[] cacheModified;
+	private int cacheSize;
 	private int pc;
 	private boolean running;
 	private int totalCacheUsed;
@@ -15,110 +17,141 @@ public class CPU extends Thread {
 
 	public CPU(int largestSize) {
 		currentProcess = null;
-		registers = new int[16];
-		cache = new String[largestSize];
+		registers = new int[Driver.NUM_REGISTERS];
+		cacheSize = largestSize;
+		cache = new String[cacheSize];
+		cacheModified = new boolean[cacheSize];
 		totalCacheUsed = 0;
 		totalCyclesRun = 0;
 
-		for (int i = 0; i < registers.length; i++)
-			registers[i] = 0;
-		
-		for (int i = 0; i < cache.length; i++)
-			cache[i] = "00000000";
+		resetFields();
 	}
-	
+
 	@Override
 	public void run() {
 		super.run();
 		ArrayList<PCB> pcbs = new ArrayList<PCB>();
-		
+
 		threadRunning = true;
-		while(threadRunning) {
+		while (threadRunning) {
 			PCB next = ShortTermScheduler.scheduleNextProcess();
-			
-			if(next != null) {
-				pcbs.add(next);
-				runProcess(next);
-				
-				Driver.getRunningQueue().remove(next);
-				Driver.getTerminatedQueue().add(next);
+
+			if (next != null) {
+				try {
+					pcbs.add(next);
+					ShortTermScheduler.restoreState(this, next);
+
+					runProcess(next);
+
+					Driver.getRunningQueue().remove(next);
+					Driver.getTerminatedQueue().add(next);
+					MemoryManager.ram().removeProcessPages(next);
+				} catch (DataFaultException e) {
+					/*
+					 * Logic for the exceptions... When one of these exceptions is thrown, it means we have to read into memory another page. When this happens, we have to remove
+					 * the currently running process from this cpu and put it back on the ready queue. Then, any cpu can pick it back up.
+					 */
+					pcbs.remove(next);
+
+					ShortTermScheduler.handleDataFault(e);
+
+					Driver.getRunningQueue().remove(next);
+					Driver.getReadyQueue().add(next);
+				} catch (PageFaultException e) {
+					pcbs.remove(next);
+
+					ShortTermScheduler.handlePageFault(e);
+
+					Driver.getRunningQueue().remove(next);
+					Driver.getReadyQueue().add(next);
+				}
 			} else {
 				Logger.log("Huh... the sts returned null for some reason...");
 				threadRunning = false;
 			}
 		}
-		
-		synchronized(Logger.class) {
+
+		synchronized (Logger.class) {
 			Logger.log("CPU %d ran the following processes:", this.getId());
-			for(PCB p : pcbs) {
+			for (PCB p : pcbs) {
 				Logger.log(p.toString());
 			}
 		}
 	}
 
-	public void runProcess(PCB nextProcess) {
+	public void runProcess(PCB nextProcess) throws DataFaultException, PageFaultException {
 		// Setup the CPU before the process is run
-		for (int i = 0; i < registers.length; i++)
-			registers[i] = 0;
-		
-		for (int i = 0; i < cache.length; i++)
-			cache[i] = "00000000";
+		// resetFields();
 
-		int start = nextProcess.instMemLoc, end = start + nextProcess.getSize();
-		for (int i = 0; i < cache.length; i++) {
-			if (i < end - start)
-				cache[i] = RAM.hexFormat(RAM.instance().read(start + i));
-			else
-				cache[i] = "00000000";
-		}
+		// int start = nextProcess.instMemLoc, end = start + nextProcess.getSize();
+		// for (int i = 0; i < cache.length; i++) {
+		// if (i < end - start)
+		// cache[i] = MemoryManager.hexFormat(MemoryManager.ram().read(start + i));
+		// else
+		// cache[i] = "00000000";
+		// }
 
-		nextProcess.pc = nextProcess.instMemLoc;
+		// nextProcess.pc = nextProcess.instMemLoc;
 		currentProcess = nextProcess;
-		pc = currentProcess.instMemLoc;
+		// pc = currentProcess.pc;
 
 		long startTime = System.currentTimeMillis();
 		// Run the process
 		running = true;
 		while (running) {
-			String hex = cache[pc - currentProcess.instMemLoc];
+			// String hex = cache[pc - currentProcess.instMemLoc];
+			int nextInstructionAddress = pc - currentProcess.instMemLoc;
+			String hex = fetchInstruction(nextInstructionAddress);
 			String binaryString = hexToBinary(hex);
-			
-			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, pc);
+
+			Logger.log("About to execute the following instruction: (hex)%s. (binary)%s. Current PC: %d.", hex, binaryString, nextInstructionAddress);
 			executeInstruction(binaryString);
 			currentProcess.cyclesRan++;
 		}
-		
+
 		long endTime = System.currentTimeMillis();
-		
+
 		Logger.log("PROCESS DONE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + currentProcess);
-		
+
 		int cacheUsed = 0;
 		for (int i = 0; i < cache.length; i++) {
-			if (!cache[i].equals("00000000"))
+			if (!cache[i].equals(MemoryManager.EMPTY_MEMORY))
 				++cacheUsed;
 		}
 		totalCacheUsed += cacheUsed;
-		
+
 		totalCyclesRun += currentProcess.cyclesRan;
-		
+
 		currentProcess.realRunTime = endTime - startTime;
-		
+
 		totalTimeRunning += endTime - startTime;
 	}
-	
-	public int getTotalCacheUsed() {
-		return totalCacheUsed;
-	}
-	
-	public int getTotalCyclesRun() {
-		return totalCyclesRun;
-	}
-	
-	public long getTotalTimeRunning() {
-		return totalTimeRunning;
+
+	private String fetchInstruction(int loc) throws PageFaultException {
+		if ((pc - currentProcess.instMemLoc) <= currentProcess.getSize()) {
+			if (!currentProcess.pageFaultTable.containsKey(loc / Driver.WORDS_PER_PAGE))
+				throw new PageFaultException(currentProcess, this, loc / Driver.WORDS_PER_PAGE);
+
+			if (currentProcess.pageFaultTable.get(loc / Driver.WORDS_PER_PAGE))
+				return cache[loc];
+			else
+				throw new PageFaultException(currentProcess, this, loc / Driver.WORDS_PER_PAGE);
+		} else
+			return null;
 	}
 
-	public void executeInstruction(String binaryString) {
+	private void resetFields() {
+		for (int i = 0; i < registers.length; i++)
+			registers[i] = 0;
+
+		for (int i = 0; i < cache.length; i++)
+			cache[i] = MemoryManager.EMPTY_MEMORY;
+
+		for (int i = 0; i < cacheModified.length; i++)
+			cacheModified[i] = false;
+	}
+
+	public void executeInstruction(String binaryString) throws DataFaultException {
 		if (getOpcode(binaryString) == 0x13) {
 			System.out.println("NOP Found!");
 		} else if (getOpcode(binaryString) == 0x12) {
@@ -128,7 +161,7 @@ public class CPU extends Thread {
 		}
 
 		int instructionType = getInstructionType(binaryString);
-		
+
 		Logger.log("Instruction type: %d", instructionType);
 
 		switch (instructionType) {
@@ -202,7 +235,7 @@ public class CPU extends Thread {
 		pc++;
 	}
 
-	private void doConditionalBranch(String binaryString) {
+	private void doConditionalBranch(String binaryString) throws DataFaultException {
 		Logger.log("Doing a conditional branch instruction!");
 		int opcode = getOpcode(binaryString);
 		int bReg = getCondBReg(binaryString);
@@ -227,13 +260,22 @@ public class CPU extends Thread {
 
 		switch (opcode) {
 		case 0x02: // ST
-			if(dReg != 0) 
-				cache[registers[dReg]] = RAM.hexFormat(Integer.toHexString(registers[bReg]));
-			else
-				cache[address] = RAM.hexFormat(Integer.toHexString(registers[bReg]));
+			if (dReg != 0) {
+				if (checkForDataFault(registers[dReg] / Driver.WORDS_PER_PAGE)) {
+					cache[registers[dReg]] = MemoryManager.hexFormat(Integer.toHexString(registers[bReg]));
+					cacheModified[registers[dReg]] = true;
+				}
+			} else {
+				if (checkForDataFault(registers[bReg] / Driver.WORDS_PER_PAGE)) {
+					cache[address] = MemoryManager.hexFormat(Integer.toHexString(registers[bReg]));
+					cacheModified[address] = true;
+				}
+			}
 			break;
 		case 0x03: // LW
-			registers[dReg] = Integer.parseInt(cache[registers[bReg]], 16);
+			if (checkForDataFault(registers[bReg] / Driver.WORDS_PER_PAGE)) {
+				registers[dReg] = Integer.parseInt(cache[registers[bReg]], 16);
+			}
 			break;
 		case 0x0B: // MOVI
 			if (address != 0)
@@ -296,13 +338,18 @@ public class CPU extends Thread {
 		int opcode = getOpcode(binaryString);
 		int jumpAddress = getJumpAddress(binaryString);
 		Logger.log("IO args: opcode: %d. jumpAddress: %d.", opcode, jumpAddress);
-		
+
 		if (opcode == 0x14) {
 			pc = jumpAddress;
 		}
 	}
 
-	private void doIO(String binaryString) {
+	/*
+	 * Here's the problem:
+	 * We need to read from that cache at specific indices, but since we are now stuffing all the pages in the front of the cache, we can't do that anymore.
+	 * Therefore, something has to be done so that all the addresses that are stored in the register can actually be used (Preferably without modifying the addresses...) 
+	 */
+	private void doIO(String binaryString) throws DataFaultException {
 		Logger.log("Doing an IO instruction!");
 		int opcode = getOpcode(binaryString);
 		int reg1 = getIOReg1(binaryString);
@@ -316,20 +363,30 @@ public class CPU extends Thread {
 		switch (opcode) {
 		case 0x00: // RD
 			if (reg2 != 0) {
-				registers[reg1] = Integer.parseInt(cache[registers[reg2]], 16);
+				if (checkForDataFault(registers[reg2] / Driver.WORDS_PER_PAGE)) {
+					registers[reg1] = Integer.parseInt(cache[registers[reg2]], 16);
+				}
 			} else {
-				String read = cache[address];
-				int i = Integer.parseInt(read, 16);
-				Logger.log("Read from RAM: %s. As int: %d", read, i);
-				registers[reg1] = i;
+				if (checkForDataFault(address / Driver.WORDS_PER_PAGE)) {
+					String read = cache[address];
+					int i = Integer.parseInt(read, 16);
+					Logger.log("Read from RAM: %s. As int: %d", read, i);
+					registers[reg1] = i;
+				}
 			}
 			break;
 		case 0x01: // WR
 			if (reg2 != 0) {
-				cache[registers[reg2]] = RAM.hexFormat(Integer.toHexString(registers[reg1]));
+				if (checkForDataFault(registers[reg1] / Driver.WORDS_PER_PAGE)) {
+					cache[registers[reg2]] = MemoryManager.hexFormat(Integer.toHexString(registers[reg1]));
+					cacheModified[registers[reg2]] = true;
+				}
 			} else {
-				String hex = RAM.hexFormat(Integer.toHexString(registers[reg1]));
-				cache[address] = hex;
+				if (checkForDataFault(address / Driver.WORDS_PER_PAGE)) {
+					String hex = MemoryManager.hexFormat(Integer.toHexString(registers[reg1]));
+					cache[address] = hex;
+					cacheModified[address] = true;
+				}
 			}
 			break;
 		}
@@ -369,7 +426,7 @@ public class CPU extends Thread {
 
 	private int getCondAddress(String binaryString) {
 		int i = Integer.parseInt(binaryString.substring(16, 32), 2);
-		if(i != 1)
+		if (i != 1)
 			i /= 4;
 		return i;
 	}
@@ -410,6 +467,16 @@ public class CPU extends Thread {
 		return "";
 	}
 
+	private boolean checkForDataFault(int page) throws DataFaultException {
+		if (!currentProcess.pageFaultTable.containsKey(page))
+			throw new DataFaultException(this, currentProcess, page);
+
+		if (currentProcess.pageFaultTable.get(page))
+			return true;
+		else
+			throw new DataFaultException(this, currentProcess, page);
+	}
+
 	// Converts a string of binary into chunks so we can see what each part is
 	public String arithmaticString(String binaryString) {
 		return String.format("%d. %d. %d. %d. %d. %d.", getInstructionType(binaryString), getOpcode(binaryString), getArithSReg1(binaryString), getArithSReg2(binaryString), getArithDReg(binaryString), binaryString.substring(20));
@@ -428,5 +495,45 @@ public class CPU extends Thread {
 	// Converts a string of binary into chunks so we can see what each part is
 	public String ioString(String binaryString) {
 		return String.format("%d. %d. %d. %d. %d.", getInstructionType(binaryString), getOpcode(binaryString), getIOReg1(binaryString), getIOReg2(binaryString), getIOAddress(binaryString));
+	}
+
+	public int getTotalCacheUsed() {
+		return totalCacheUsed;
+	}
+
+	public int getTotalCyclesRun() {
+		return totalCyclesRun;
+	}
+
+	public long getTotalTimeRunning() {
+		return totalTimeRunning;
+	}
+
+	public String[] getCache() {
+		return cache;
+	}
+
+	public boolean[] getCacheModified() {
+		return cacheModified;
+	}
+
+	public int[] getRegisters() {
+		return registers;
+	}
+
+	public void setRegisters(int[] registers) {
+		this.registers = registers;
+	}
+
+	public int getPc() {
+		return pc;
+	}
+
+	public void setPc(int pc) {
+		this.pc = pc;
+	}
+
+	public int getCacheSize() {
+		return cacheSize;
 	}
 }

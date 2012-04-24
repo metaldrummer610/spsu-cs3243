@@ -1,5 +1,8 @@
 package edu.spsu.cs3243;
 
+import java.util.Arrays;
+
+@Deprecated
 public class RAM {
 
 	private String[] ram;
@@ -19,12 +22,12 @@ public class RAM {
 
 	private RAM() {
 		ram = new String[1024];
-		//next_location = 0;
+		// next_location = 0;
 		size = 1024;
-		
-		numFrames = (size/4);
+
+		numFrames = (size / 4);
 		full = new boolean[numFrames];
-		for(int i = 0; i<numFrames; i++) {
+		for (int i = 0; i < numFrames; i++) {
 			full[i] = false;
 		}
 
@@ -33,76 +36,69 @@ public class RAM {
 	private RAM(int a) {
 		ram = new String[a];
 		size = ram.length;
-		//next_location = 0;
-		
-		numFrames = (size/4);
+		// next_location = 0;
+
+		numFrames = (size / 4);
 		full = new boolean[numFrames];
-		for(int i = 0; i < numFrames; i++) {
+		for (int i = 0; i < numFrames; i++) {
 			full[i] = false;
 		}
 	}
-	
+
 	public int nextFrame() {
-		for(int j = 0; j < numFrames; j++) {
-			if(full[j] == false) {
-				return j;
-			}
-		}
-			 
-				return -1;
-		}
-	
+		return Arrays.asList(full).indexOf(false);
+	}
 
 	public int size() {
 		return size;
 	}
-	
+
 	public int frames() {
 		return numFrames;
 	}
 
 	public boolean empty() {
-		//return next_location == 0;
-		for(int j = 0; j < numFrames; j++) {
-			if(full[j] == true) {
+		// return next_location == 0;
+		for (int j = 0; j < numFrames; j++) {
+			if (full[j] == true) {
 				return false;
 			}
-				
+
 		}
 		return true;
 	}
 
 	public boolean full() {
-		//return next_location == size;
-		
-		for(int j = 0; j < numFrames; j++) {
-			if(full[j] == false) {
-				return true;
+		// return next_location == size;
+
+		for (int j = 0; j < numFrames; j++) {
+			if (full[j] == false) {
+				return false;
 			}
 		}
-		
-		return false;
+
+		return true;
 	}
-	
+
 	public int usedFrames() {
 		return numFrames - freeFrames();
-		
+
 	}
-	
+
 	public int freeFrames() {
 		int free = numFrames;
-		for(int j = 0; j < numFrames; j++) {
-			if(full[j] == true) {
-				 free--;
+		for (int j = 0; j < numFrames; j++) {
+			if (full[j] == true) {
+				free--;
 			}
 		}
-		
+
 		return free;
 	}
 
-	/*public int free() {
-		return 1024 - next_location;
-	}*/
+	/*
+	 * public int free() { return 1024 - next_location; }
+	 */
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
@@ -131,9 +127,9 @@ public class RAM {
 		for (int i = 0; i < ram.length; i++) {
 			ram[i] = "00000000";
 		}
-		//next_location = 0;
-		
-		for(int j = 0; j < numFrames; j++) {
+		// next_location = 0;
+
+		for (int j = 0; j < numFrames; j++) {
 			full[j] = false;
 		}
 	}
@@ -165,37 +161,28 @@ public class RAM {
 
 	// Write data to next free ram location
 	public int write(String w) {
-		/*if (next_location > 1024) {
-			System.out.println("Write Error: location" + next_location);
-		}
+		/*
+		 * if (next_location > 1024) { System.out.println("Write Error: location" + next_location); } else { if (w != null) { ram[next_location] = hexFormat(w); int temp =
+		 * next_location; next_location++; return temp; } } return -1;
+		 */
 
-		else {
-			if (w != null) {
-				ram[next_location] = hexFormat(w);
-				int temp = next_location;
-				next_location++;
-				return temp;
-			}
-		}
-		return -1;*/
-		
 		if (full()) {
 			System.out.println("Write Error: RAM full");
 		}
-		
-		else { 
-			
-			if(w != null) {
+
+		else {
+
+			if (w != null) {
 				int writeRAM = 1;
 				for (int j = 0; j < numFrames && writeRAM == -1; j++) {
-					if ( full[j] == false) {
+					if (full[j] == false) {
 						writeRAM = j;
 					}
 				}
-				
+
 			}
 		}
-			return -1;
+		return -1;
 	}
 
 	// Write data to RAM
@@ -226,52 +213,48 @@ public class RAM {
 			}
 		}
 	}
-	
+
 	public int writeFrame(String s, int b, int o) {
-        if(s!=null) {
-                s=hexFormat(s);
-///                     System.out.println("Writing:"+s+" into:"+b+"+"+o);
-                if((b*4+o)>=0 && (b*4+o) < size) {
-                        if (full[b]==false)
-                        {
-                                full[b]=true; 
-                        }
-                        ram[b*4+o]=s;
-                        
-                }
-                else {
-                                System.out.println("RAM Write Error @ Location:"+(b+o));
-                }       
-        }
-        return b;       
-}       
+		if (s != null) {
+			s = hexFormat(s);
+			// / System.out.println("Writing:"+s+" into:"+b+"+"+o);
+			if ((b * 4 + o) >= 0 && (b * 4 + o) < size) {
+				if (full[b] == false) {
+					full[b] = true;
+				}
+				ram[b * 4 + o] = s;
 
-/**
-* Writes the data to RAM where the page is unknown
-* @param s The string to be written
-* @return The page that was written to
-*/
-public int writeFrame(String s) {
-        if(s!=null) {
-                s=hexFormat(s);
-                int b=this.nextFrame();
-//              System.out.println("Writing:"+s+" into:"+b);
-                if ((b*4) >= 0 && (b*4) < size) {
-                        if (full[b]==false)
-                        {
-                                full[b]=true; 
-                        }
-                        ram[b*4]=s;
-                        
-                }
-                else {
-                                System.out.println("RAM Write Error @ Location:"+b);
-                }
-                return (b*4);    
-        }
-        return -1;
-}       
+			} else {
+				System.out.println("RAM Write Error @ Location:" + (b + o));
+			}
+		}
+		return b;
+	}
 
+	/**
+	 * Writes the data to RAM where the page is unknown
+	 * 
+	 * @param s
+	 *            The string to be written
+	 * @return The page that was written to
+	 */
+	public int writeFrame(String s) {
+		if (s != null) {
+			s = hexFormat(s);
+			int b = this.nextFrame();
+			// System.out.println("Writing:"+s+" into:"+b);
+			if ((b * 4) >= 0 && (b * 4) < size) {
+				if (full[b] == false) {
+					full[b] = true;
+				}
+				ram[b * 4] = s;
 
+			} else {
+				System.out.println("RAM Write Error @ Location:" + b);
+			}
+			return (b * 4);
+		}
+		return -1;
+	}
 
 }
