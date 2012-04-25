@@ -8,7 +8,6 @@ public class PCB {
 	long lastStateSwitch, realWaitTime, realRunTime, faultTime;
 	String[] inputBuffer, outputBuffer, tempBuffer;
 	HashMap<Integer, Integer> pageTable; // This contains all the indices of the pages we own.
-	HashMap<Integer, Boolean> pageFaultTable; // This lets us know if a specific page we own has been faulted
 	int[] registers;
 
 	public PCB() {
@@ -33,7 +32,6 @@ public class PCB {
 		faultTime = 0;
 		lastStateSwitch = 0;
 		pageTable = new HashMap<Integer, Integer>();
-		pageFaultTable = new HashMap<Integer, Boolean>();
 		registers = new int[Driver.NUM_REGISTERS];
 		Arrays.fill(registers, 0);
 	}
@@ -48,6 +46,6 @@ public class PCB {
 				+ tempBufferSize + ", pc=" + pc + ", pageFaults=" + pageFaults + ", dataSize=" + dataSize + ", dataMemLoc=" + dataMemLoc + ", dataDiskLoc=" + dataDiskLoc + ", instMemLoc="
 				+ instMemLoc + ", instDiskLoc=" + instDiskLoc + ", cyclesRan=" + cyclesRan + ", cyclesWaited=" + cyclesWaited + ", IOCount=" + IOCount + ", lastStateSwitch=" + lastStateSwitch
 				+ ", realWaitTime=" + realWaitTime + ", realRunTime=" + realRunTime + ", faultTime=" + faultTime + ", inputBuffer=" + Arrays.toString(inputBuffer) + ", outputBuffer="
-				+ Arrays.toString(outputBuffer) + ", tempBuffer=" + Arrays.toString(tempBuffer) + ", pageTable=" + pageTable + ", pageFaultTable=" + pageFaultTable + "]";
+				+ Arrays.toString(outputBuffer) + ", tempBuffer=" + Arrays.toString(tempBuffer) + ", pageTable=" + pageTable + ", registers=" + Arrays.toString(registers) + "]";
 	}
 }
