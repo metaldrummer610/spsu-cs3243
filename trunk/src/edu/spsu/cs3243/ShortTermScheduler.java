@@ -88,36 +88,42 @@ public class ShortTermScheduler {
 	 * 
 	 * @param e
 	 */
-	public static synchronized void handleDataFault(DataFaultException e) {
-		CPU cpu = e.getCpu();
-		PCB process = e.getCurrentProcess();
-		int page = e.getPage();
-
-		// Add another fault...
-		process.pageFaults++;
-
-		saveState(cpu, process);
-		// restoreState(cpu, process);
-
-		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
-		String[] data = MemoryManager.disk().readPage(pos);
-
-		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data);
-		process.pageFaultTable.put(page, true);
-		process.pageTable.put(page, wroteTo);
-	}
+//	public static synchronized void handleDataFault(DataFaultException e) {
+//		CPU cpu = e.getCpu();
+//		PCB process = e.getCurrentProcess();
+//		int page = e.getPage();
+//
+//		// Add another fault...
+//		process.pageFaults++;
+//
+//		saveState(cpu, process);
+//		// restoreState(cpu, process);
+//
+//		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
+//		String[] data = MemoryManager.disk().readPage(pos, process);
+//
+//		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data, process);
+//		if(wroteTo != -1) {
+//			process.pageTable.put(page, wroteTo);
+//		}
+//	}
 
 	public static synchronized void handlePageFault(PageFaultException e) {
 		CPU cpu = e.getCpu();
 		PCB process = e.getProcess();
 		int page = e.getPage();
 
+		process.pageFaults++;
+		
 		saveState(cpu, process);
 
-		String[] data = MemoryManager.disk().readPage(process.instDiskLoc);
-		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data);
-		process.pageFaultTable.put(page, true);
-		process.pageTable.put(page, wroteTo);
+		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
+		String[] data = MemoryManager.disk().readPage(pos, process);
+		
+		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data, process);
+		if(wroteTo != -1) {
+			process.pageTable.put(page, wroteTo);
+		}
 	}
 
 	public static void restoreState(CPU cpu, PCB process) {
@@ -126,7 +132,7 @@ public class ShortTermScheduler {
 			Integer page = entry.getKey();
 			Integer ramLocation = entry.getValue();
 
-			String[] pageData = MemoryManager.ram().readPage(ramLocation);
+			String[] pageData = MemoryManager.ram().readPage(ramLocation, process);
 			for (int offset = 0; offset < Driver.WORDS_PER_PAGE; offset++) {
 				cpu.getCache()[(page * Driver.WORDS_PER_PAGE) + offset] = MemoryManager.hexFormat(pageData[offset]);
 			}
@@ -148,7 +154,7 @@ public class ShortTermScheduler {
 				cacheData[j] = cpu.getCache()[(page * Driver.WORDS_PER_PAGE) + j];
 			}
 
-			MemoryManager.ram().writePage(cacheData, ramLocation);
+			MemoryManager.ram().writePage(cacheData, ramLocation, process);
 		}
 
 		process.registers = cpu.getRegisters();

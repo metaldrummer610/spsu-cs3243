@@ -34,10 +34,15 @@ public class Loader {
 					data(input, newPCB);
 					dataStart = true;
 				} else if (input.contains("END")) {
+					MemoryManager.disk().markFrameFull(currentPage);
+					MemoryManager.disk().markFrameOwner(newPCB, currentPage);
+					currentPage = -1;
+					currentOffset = 0;
+					
 					endData(newPCB, lines);
 				} else if (input.length() > 0) {
 					if (currentPage == -1 || currentOffset >= Driver.WORDS_PER_PAGE) {
-						currentPage = MemoryManager.disk().nextFrame();
+						currentPage = MemoryManager.disk().nextPage();
 						currentOffset = 0;
 					}
 
@@ -58,10 +63,13 @@ public class Loader {
 					currentOffset++;
 					
 					// We have to manually mark this page as being full because of the way the data is being read in
-					if(currentOffset >= Driver.WORDS_PER_PAGE)
+					if(currentOffset >= Driver.WORDS_PER_PAGE) {
 						MemoryManager.disk().markFrameFull(currentPage);
+						MemoryManager.disk().markFrameOwner(newPCB, currentPage);
+					}
 				}
 			}
+			
 			in.close();
 		} catch (IOException e) {
 			System.err.println("Loader reader exception");

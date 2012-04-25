@@ -3,7 +3,7 @@ package edu.spsu.cs3243;
 import java.util.ArrayList;
 
 public class Driver {
-	private static final int NUM_CPUS = 1;
+	private static final int NUM_CPUS = 4;
 	public static final int WORDS_PER_PAGE = 4;
 	public static final int NUM_REGISTERS = 16;
 	private ArrayList<CPU> cpus;

@@ -22,22 +22,16 @@ public class LongTermScheduler {
 
 			int currentPage = 0;
 			for (int current = job.instDiskLoc; currentPage < Driver.WORDS_PER_PAGE; currentPage++) {
-				String[] pageData = new String[Driver.WORDS_PER_PAGE];
-
-				for (int currentOffset = 0; currentOffset < Driver.WORDS_PER_PAGE; currentOffset++) {
-					pageData[currentOffset] = MemoryManager.disk().read(current + currentOffset);
-				}
+				String[] pageData = MemoryManager.disk().readPage(current, job);
 				current += Driver.WORDS_PER_PAGE;
 
 				if (currentPage == 0) {
-					job.instMemLoc = MemoryManager.ram().writeNextAvailablePage(pageData);
+					job.instMemLoc = MemoryManager.ram().writeNextAvailablePage(pageData, job);
 					job.pc = job.instMemLoc;
 					job.pageTable.put(currentPage, job.instMemLoc);
-					job.pageFaultTable.put(currentPage, true);
 				} else {
-					int wroteTo = MemoryManager.ram().writeNextAvailablePage(pageData);
+					int wroteTo = MemoryManager.ram().writeNextAvailablePage(pageData, job);
 					job.pageTable.put(currentPage, wroteTo);
-					job.pageFaultTable.put(currentPage, true);
 				}
 			}
 			

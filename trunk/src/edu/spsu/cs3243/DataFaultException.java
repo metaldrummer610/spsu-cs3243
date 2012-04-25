@@ -1,5 +1,6 @@
 package edu.spsu.cs3243;
 
+@Deprecated
 public class DataFaultException extends Exception {
 	private static final long serialVersionUID = -3492439969492179091L;
 	private CPU cpu;
