@@ -1,5 +1,6 @@
 package edu.spsu.cs3243;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map.Entry;
 
@@ -15,7 +16,14 @@ public class MemoryManager {
 	 */
 	private static MemoryManager diskInstance = null;
 
+	/**
+	 * A String that represents a blank word in memory
+	 */
 	public static final String EMPTY_MEMORY = "00000000";
+	
+	/**
+	 * The size of a word in memory
+	 */
 	public static final int WORD_SIZE = 8;
 
 	// Instance members
@@ -43,6 +51,11 @@ public class MemoryManager {
 	 * An array that represents which process owns a specific page
 	 */
 	private PCB[] pageManagement;
+	
+	/**
+	 * Each entry in this list is the amount of memory being used after a paging operation has been executed
+	 */
+	private ArrayList<Integer> memoryUsageList;
 
 	/**
 	 * Gives you the Ram instance
@@ -82,6 +95,7 @@ public class MemoryManager {
 		numFrames = size / 4;
 		full = new boolean[numFrames];
 		pageManagement = new PCB[numFrames];
+		memoryUsageList = new ArrayList<Integer>();
 
 		erase();
 	}
@@ -91,7 +105,7 @@ public class MemoryManager {
 	 * 
 	 * @return The index of the next available frame, or -1 if it is full
 	 */
-	public int nextPage() {
+	public synchronized int nextPage() {
 		int i = 0;
 		for (boolean b : full) {
 			if (!b) {
@@ -126,7 +140,7 @@ public class MemoryManager {
 	 * 
 	 * @return False if the entire array is empty, true if it contains anything at all
 	 */
-	public boolean empty() {
+	public synchronized boolean empty() {
 		for (int j = 0; j < numFrames; j++) {
 			if (full[j] == true) {
 				return false;
@@ -140,7 +154,7 @@ public class MemoryManager {
 	 * 
 	 * @return True if we have no empty space, false if we have any at all
 	 */
-	public boolean full() {
+	public synchronized boolean full() {
 		for (int j = 0; j < numFrames; j++) {
 			if (full[j] == false) {
 				return false;
@@ -154,7 +168,7 @@ public class MemoryManager {
 	 * 
 	 * @return The number of used frames
 	 */
-	public int usedFrames() {
+	public synchronized int usedFrames() {
 		return numFrames - freeFrames();
 	}
 
@@ -163,7 +177,7 @@ public class MemoryManager {
 	 * 
 	 * @return The number of free frames
 	 */
-	public int freeFrames() {
+	public synchronized int freeFrames() {
 		int free = numFrames;
 		for (int j = 0; j < numFrames; j++) {
 			if (full[j] == true) {
@@ -189,7 +203,7 @@ public class MemoryManager {
 	 * Handy toString override
 	 */
 	@Override()
-	public String toString() {
+	public synchronized String toString() {
 		StringBuilder b = new StringBuilder();
 		b.append("Memory Dump: \n");
 		for (int i = 0; i < memory.length; i++) {
@@ -203,7 +217,7 @@ public class MemoryManager {
 	/**
 	 * Erases the contents of our memory (What? I forgot what I was talking about...)
 	 */
-	public void erase() {
+	public synchronized void erase() {
 		Arrays.fill(full, false);
 		Arrays.fill(memory, EMPTY_MEMORY);
 		Arrays.fill(pageManagement, null);
@@ -267,15 +281,15 @@ public class MemoryManager {
 	}
 
 	/**
-	 * Reads a page based on the given base address. For example: Process p's base address is 20. To read page 4, pass this function: (20, 4).
+	 * Reads a page based on the given base address.
 	 * 
 	 * @param baseAddress
 	 *            The base address of the process that owns the page we want to read
-	 * @param page
-	 *            The page we want to read
-	 * @return The filled page calculated by (baseAddress + (page * Driver.WORDS_PER_PAGE))
+	 * @param owner
+	 *            The process that wants to read the page
+	 * @return The filled page
 	 */
-	public String[] readPage(int baseAddress, PCB owner) {
+	public synchronized String[] readPage(int baseAddress, PCB owner) {
 		int pageAddress = (baseAddress);
 		int page = baseAddress / Driver.WORDS_PER_PAGE;
 		if (pageAddress >= 0 && pageAddress < size) {
@@ -288,7 +302,7 @@ public class MemoryManager {
 
 				return ret;
 			} else {
-				System.out.println("Oh snap 1");
+				Logger.log("Oh snap 1");
 			}
 		}
 
@@ -296,16 +310,16 @@ public class MemoryManager {
 	}
 
 	/**
-	 * Writes the given data to the given process's page. Calculated by (baseAddress + (page * Driver.WORDS_PER_PAGE))
+	 * Writes the given data to the given process's page.
 	 * 
 	 * @param data
 	 *            The data we want to write
 	 * @param baseAddress
-	 *            The base address of the process that owns this page
-	 * @param page
-	 *            The page we're wanting to write to
+	 *            The base address of the page we want to write to
+	 * @param owner
+	 *            The owner of the page we want to write to
 	 */
-	public void writePage(String[] data, int baseAddress, PCB owner) {
+	public synchronized void writePage(String[] data, int baseAddress, PCB owner) {
 		int pageAddress = (baseAddress);
 		int page = baseAddress / Driver.WORDS_PER_PAGE;
 		if (pageAddress >= 0 && pageAddress < size && data != null && data.length == 4) {
@@ -314,7 +328,7 @@ public class MemoryManager {
 					write(data[i], pageAddress, i);
 				}
 			} else {
-				System.out.println("Oh snap 2");
+				Logger.log("Oh snap 2");
 			}
 		}
 	}
@@ -326,7 +340,7 @@ public class MemoryManager {
 	 *            The data we're writing to memory
 	 * @return The base address we wrote to, or -1 if we can't write to a page
 	 */
-	public int writeNextAvailablePage(String[] data, PCB owner) {
+	public synchronized int writeNextAvailablePage(String[] data, PCB owner) {
 		if (data != null && data.length == 4) {
 			for (int j = 0; j < numFrames; j++) {
 				if (full[j] == false && pageManagement[j] == null) {
@@ -336,6 +350,7 @@ public class MemoryManager {
 
 					full[j] = true;
 					pageManagement[j] = owner;
+					memoryUsageList.add(getCurrentUsage());
 					return j * Driver.WORDS_PER_PAGE;
 				}
 			}
@@ -343,7 +358,6 @@ public class MemoryManager {
 
 		return -1;
 	}
-
 
 	/**
 	 * Puts the given String into hex format
@@ -362,7 +376,13 @@ public class MemoryManager {
 		return EMPTY_MEMORY;
 	}
 
-	public void removeProcessPages(PCB process) {
+	/**
+	 * Clears out the pages that this process owns
+	 * 
+	 * @param process
+	 *            The process whose pages we're clearing out
+	 */
+	public synchronized void removeProcessPages(PCB process) {
 		for (Entry<Integer, Integer> entry : process.pageTable.entrySet()) {
 			Integer ramLocation = entry.getValue();
 
@@ -372,9 +392,32 @@ public class MemoryManager {
 				write(EMPTY_MEMORY, ramLocation, i);
 			}
 		}
+		
+		memoryUsageList.add(getCurrentUsage());
 	}
 
-	public void markFrameOwner(PCB process, int page) {
+	/**
+	 * Manually marking a page as having the given owner.
+	 * 
+	 * @param process
+	 *            The process that owns the page
+	 * @param page
+	 *            The page we need to mark
+	 */
+	public synchronized void markFrameOwner(PCB process, int page) {
 		pageManagement[page] = process;
+	}
+	
+	public int getCurrentUsage() {
+		int ret = numFrames - freeFrames();
+		
+		return ret;
+	}
+	
+	public void printUsage() {
+		StatsLogger.log("Memory Usage:");
+		for(Integer i : memoryUsageList) {
+			StatsLogger.log("%d", i);
+		}
 	}
 }

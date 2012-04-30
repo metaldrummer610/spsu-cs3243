@@ -8,7 +8,7 @@ public class LongTermScheduler {
 		ProcessQueue newQueue = Driver.getNewQueue();
 		ProcessQueue readyQueue = Driver.getReadyQueue();
 		if (!loadProcess(newQueue)) {
-			System.out.println("Done");
+			Logger.log("Done");
 			return;
 		}
 
@@ -16,7 +16,7 @@ public class LongTermScheduler {
 		for (int j = 0; j < newQueue.processes.size(); j++) {
 			PCB job = newQueue.processes.get(j);
 			if (((Driver.WORDS_PER_PAGE * 2) > MemoryManager.ram().freeFrames())) {
-				System.out.println("No RAM left");
+				Logger.log("No RAM left");
 				break;
 			}
 

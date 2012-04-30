@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.Map.Entry;
 
 public class ShortTermScheduler {
-	private static ScheduleType type = ScheduleType.SJF;
+	public static ScheduleType type = ScheduleType.SJF;
 
 	public enum ScheduleType {
 		FIFO, SJF, PRIORITY
@@ -17,37 +17,39 @@ public class ShortTermScheduler {
 		ProcessQueue runningQueue = Driver.getRunningQueue();
 		// Takes a process from the readyQueue and puts it on the runningQueue
 
-		switch (type) {
-		case FIFO:
-			if (!readyQueue.processes.isEmpty()) {
-				PCB p = readyQueue.processes.get(0);
-				runningQueue.processes.add(p);
-				readyQueue.processes.remove(p);
-				return p;
-			}
-			break;
-		case PRIORITY:
-			if (!readyQueue.processes.isEmpty()) {
-				Collections.sort(readyQueue.processes, new PriorityComparator());
+		synchronized (runningQueue) {
+			switch (type) {
+			case FIFO:
+				if (!readyQueue.processes.isEmpty()) {
+					PCB p = readyQueue.processes.get(0);
+					runningQueue.processes.add(p);
+					readyQueue.processes.remove(p);
+					return p;
+				}
+				break;
+			case PRIORITY:
+				if (!readyQueue.processes.isEmpty()) {
+					Collections.sort(readyQueue.processes, new PriorityComparator());
 
-				PCB p = readyQueue.processes.get(0);
-				runningQueue.processes.add(p);
-				readyQueue.processes.remove(p);
-				System.out.println("Returning process: " + p.toString());
-				return p;
-			}
-			break;
-		case SJF:
-			if (!readyQueue.processes.isEmpty()) {
-				Collections.sort(readyQueue.processes, new SJFComparator());
+					PCB p = readyQueue.processes.get(0);
+					runningQueue.processes.add(p);
+					readyQueue.processes.remove(p);
+					// Logger.log("Returning process: " + p.toString());
+					return p;
+				}
+				break;
+			case SJF:
+				if (!readyQueue.processes.isEmpty()) {
+					Collections.sort(readyQueue.processes, new SJFComparator());
 
-				PCB p = readyQueue.processes.get(0);
-				runningQueue.processes.add(p);
-				readyQueue.processes.remove(p);
-				System.out.println("Returning process: " + p.toString());
-				return p;
+					PCB p = readyQueue.processes.get(0);
+					runningQueue.processes.add(p);
+					readyQueue.processes.remove(p);
+					// Logger.log("Returning process: " + p.toString());
+					return p;
+				}
+				break;
 			}
-			break;
 		}
 
 		return null;
@@ -83,47 +85,51 @@ public class ShortTermScheduler {
 		}
 	}
 
-	/**
-	 * This handles a data fault that is generated when a process tries to access a page that has faulted
-	 * 
-	 * @param e
-	 */
-//	public static synchronized void handleDataFault(DataFaultException e) {
-//		CPU cpu = e.getCpu();
-//		PCB process = e.getCurrentProcess();
-//		int page = e.getPage();
-//
-//		// Add another fault...
-//		process.pageFaults++;
-//
-//		saveState(cpu, process);
-//		// restoreState(cpu, process);
-//
-//		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
-//		String[] data = MemoryManager.disk().readPage(pos, process);
-//
-//		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data, process);
-//		if(wroteTo != -1) {
-//			process.pageTable.put(page, wroteTo);
-//		}
-//	}
+	public static void handleDataFault(DataFaultException e) {
+		long start = System.nanoTime();
+		CPU cpu = e.getCpu();
+		PCB process = e.getCurrentProcess();
+		int page = e.getPage();
 
-	public static synchronized void handlePageFault(PageFaultException e) {
+		// Add another fault...
+		process.dataFaults++;
+
+		saveState(cpu, process);
+
+		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
+		String[] data = MemoryManager.disk().readPage(pos, process);
+
+		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data, process);
+		if (wroteTo != -1) {
+			process.pageTable.put(page, wroteTo);
+		}
+
+		long end = System.nanoTime();
+		long total = end - start;
+		process.faultTime += total;
+	}
+
+	public static void handlePageFault(PageFaultException e) {
+		long start = System.nanoTime();
 		CPU cpu = e.getCpu();
 		PCB process = e.getProcess();
 		int page = e.getPage();
 
 		process.pageFaults++;
-		
+
 		saveState(cpu, process);
 
 		int pos = process.instDiskLoc + (page * Driver.WORDS_PER_PAGE);
 		String[] data = MemoryManager.disk().readPage(pos, process);
-		
+
 		int wroteTo = MemoryManager.ram().writeNextAvailablePage(data, process);
-		if(wroteTo != -1) {
+		if (wroteTo != -1) {
 			process.pageTable.put(page, wroteTo);
 		}
+
+		long end = System.nanoTime();
+		long total = end - start;
+		process.faultTime += total;
 	}
 
 	public static void restoreState(CPU cpu, PCB process) {
@@ -143,8 +149,6 @@ public class ShortTermScheduler {
 	}
 
 	public static void saveState(CPU cpu, PCB process) {
-		@SuppressWarnings("unused")
-		int i = 0;
 		for (Entry<Integer, Integer> entry : process.pageTable.entrySet()) {
 			Integer page = entry.getKey();
 			Integer ramLocation = entry.getValue();
