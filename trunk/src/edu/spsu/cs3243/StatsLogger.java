@@ -5,12 +5,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class Logger {
+public class StatsLogger {
 
 	private static boolean LOGGING_ENABLED = true;
 
 	private static LogType type = LogType.FILE;
-	private static String FILENAME = "output.log";
+	public static String FILENAME = "stats.log";
 	private static BufferedWriter writer;
 
 	public enum LogType {

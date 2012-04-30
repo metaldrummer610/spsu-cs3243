@@ -4,9 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class PCB {
-	int pid, processSize, priority, inputBufferSize, outputBufferSize, tempBufferSize, pc, pageFaults, dataSize, dataMemLoc, dataDiskLoc, instMemLoc, instDiskLoc, cyclesRan, cyclesWaited, IOCount;
-	long lastStateSwitch, realWaitTime, realRunTime, faultTime;
-	String[] inputBuffer, outputBuffer, tempBuffer;
+	int pid, processSize, priority, inputBufferSize, outputBufferSize, tempBufferSize, pc, pageFaults, dataSize, dataDiskLoc, instMemLoc, instDiskLoc, cyclesRan, cyclesWaited, IOCount, dataFaults;
+	long realWaitTime, realRunTime, faultTime;
 	HashMap<Integer, Integer> pageTable; // This contains all the indices of the pages we own.
 	int[] registers;
 
@@ -21,7 +20,6 @@ public class PCB {
 		dataDiskLoc = -1;
 		instDiskLoc = -1;
 		dataSize = -1;
-		dataMemLoc = -1;
 		instMemLoc = -1;
 		cyclesRan = 0;
 		cyclesWaited = 0;
@@ -30,7 +28,7 @@ public class PCB {
 		IOCount = 0;
 		pageFaults = 0;
 		faultTime = 0;
-		lastStateSwitch = 0;
+		dataFaults = 0;
 		pageTable = new HashMap<Integer, Integer>();
 		registers = new int[Driver.NUM_REGISTERS];
 		Arrays.fill(registers, 0);
@@ -40,12 +38,20 @@ public class PCB {
 		return processSize + dataSize;
 	}
 
+	public static String printHeader() {
+		return "pid\tprocessSize\tpriority\tpageFaults\tdataSize\tcyclesRan\tcyclesWaited\tIOCount\tdataFaults\trealWaitTime\trealRunTime\tfaultTime";
+	}
+
+	public String printForStats() {
+		return pid + "\t" + processSize + "\t" + priority + "\t" + pageFaults + "\t" + dataSize + "\t" + cyclesRan + "\t" + cyclesWaited + "\t" + IOCount + "\t" + dataFaults + "\t"
+				+ realWaitTime / 1000 + "\t" + realRunTime / 1000 + "\t" + faultTime / 1000;
+	}
+
 	@Override
 	public String toString() {
 		return "PCB [pid=" + pid + ", processSize=" + processSize + ", priority=" + priority + ", inputBufferSize=" + inputBufferSize + ", outputBufferSize=" + outputBufferSize + ", tempBufferSize="
-				+ tempBufferSize + ", pc=" + pc + ", pageFaults=" + pageFaults + ", dataSize=" + dataSize + ", dataMemLoc=" + dataMemLoc + ", dataDiskLoc=" + dataDiskLoc + ", instMemLoc="
-				+ instMemLoc + ", instDiskLoc=" + instDiskLoc + ", cyclesRan=" + cyclesRan + ", cyclesWaited=" + cyclesWaited + ", IOCount=" + IOCount + ", lastStateSwitch=" + lastStateSwitch
-				+ ", realWaitTime=" + realWaitTime + ", realRunTime=" + realRunTime + ", faultTime=" + faultTime + ", inputBuffer=" + Arrays.toString(inputBuffer) + ", outputBuffer="
-				+ Arrays.toString(outputBuffer) + ", tempBuffer=" + Arrays.toString(tempBuffer) + ", pageTable=" + pageTable + ", registers=" + Arrays.toString(registers) + "]";
+				+ tempBufferSize + ", pc=" + pc + ", pageFaults=" + pageFaults + ", dataSize=" + dataSize + ", dataDiskLoc=" + dataDiskLoc + ", instMemLoc=" + instMemLoc + ", instDiskLoc="
+				+ instDiskLoc + ", cyclesRan=" + cyclesRan + ", cyclesWaited=" + cyclesWaited + ", IOCount=" + IOCount + ", dataFaults=" + dataFaults + ", realWaitTime=" + realWaitTime
+				+ ", realRunTime=" + realRunTime + ", faultTime=" + faultTime + ", pageTable=" + pageTable + ", registers=" + Arrays.toString(registers) + "]";
 	}
 }
